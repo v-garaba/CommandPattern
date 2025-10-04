@@ -1,0 +1,21 @@
+{
+  // CSharpier Configuration
+  "[csharp]": {
+    "editor.defaultFormatter": "csharpier.csharpier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": false
+  },
+
+  // General Editor Settings
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+
+  // CSharpier specific settings
+  "csharpier.enableDebugLogs": false,
+
+  // File associations
+  "files.associations": {
+    "*.cs": "csharp"
+  }
+}
