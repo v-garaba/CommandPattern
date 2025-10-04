@@ -7,18 +7,6 @@ using Command.Validation;
 
 namespace Command;
 
-/// <summary>
-/// PROBLEMATIC TEXT EDITOR CLASS
-///
-/// Problems with this design:
-/// 1. All operations are hardcoded methods - can't be undone
-/// 2. No separation between invoking an operation and executing it
-/// 3. Can't queue operations for later execution
-/// 4. Can't log what operations were performed
-/// 5. Can't create compound operations (macros)
-/// 6. Testing requires creating the entire editor
-/// 7. Adding new operations requires modifying this class
-/// </summary>
 public class TextEditor(Document document, ICommandOperator commandOperator)
 {
     private readonly Document _document = document.AssertNotNull();
