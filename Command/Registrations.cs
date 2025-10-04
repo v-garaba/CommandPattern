@@ -2,6 +2,7 @@ using Command.History;
 using Command.Operations;
 using Command.Queues;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Command;
 
@@ -27,7 +28,8 @@ public static class Registrations
     internal static IServiceProvider BuildServiceProvider()
     {
         var services = new ServiceCollection();
-        RegisterCommand(services);
+        services.RegisterCommand();
+        services.AddLogging(builder => builder.AddConsole());
         return services.BuildServiceProvider();
     }
 }
