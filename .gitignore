@@ -79,8 +79,8 @@ bld/
 *.svclog
 *.scc
 
-Command/bin/*
-Command/obj/*
+bin/*
+obj/*
 
 ## Chutzpah Test files
 _Chutzpah*
