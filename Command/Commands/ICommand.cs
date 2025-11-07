@@ -21,5 +21,5 @@ public interface ICommand
     /// </summary>
     void Undo();
 
-    string ToString() => Description;
+    string? ToString() => Description;
 }

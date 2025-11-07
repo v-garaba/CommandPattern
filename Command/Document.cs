@@ -6,7 +6,7 @@ public sealed class Document()
 {
     private readonly StringBuilder _text = new();
 
-    public string Content => _text.ToString();
+    public string Content => _text.ToString(); // Document State
     public int Length => _text.Length;
 
     internal void InsertText(int position, string text)

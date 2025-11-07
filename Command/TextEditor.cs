@@ -7,9 +7,9 @@ using Command.Validation;
 
 namespace Command;
 
-public class TextEditor(Document document, ICommandOperator commandOperator)
+public class TextEditor(ICommandOperator commandOperator)
 {
-    private readonly Document _document = document.AssertNotNull();
+    private readonly Document _document = new();
     private readonly ICommandOperator _commandOperator = commandOperator.AssertNotNull();
 
     public string Content => _document.Content;
