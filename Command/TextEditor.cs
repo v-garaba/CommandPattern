@@ -1,38 +1,34 @@
-using System.Collections.Immutable;
-using System.Text;
 using Command.Commands;
-using Command.History;
 using Command.Operations;
 using Command.Validation;
 
 namespace Command;
 
-public class TextEditor(ICommandOperator commandOperator)
+public class TextEditor(ICommandOperator<Document> commandOperator)
 {
-    private readonly Document _document = new();
-    private readonly ICommandOperator _commandOperator = commandOperator.AssertNotNull();
+    private readonly ICommandOperator<Document> _commandOperator = commandOperator.AssertNotNull();
+    private Document _document = new();
 
-    public string Content => _document.Content;
     public int DocumentLength => _document.Length;
 
     public void InsertText(int position, string text)
     {
         var insertCommand = new InsertCommand(_document, position, text);
-        _commandOperator.ExecuteCommand(insertCommand);
+        _document = _commandOperator.ExecuteCommand(insertCommand);
         Console.WriteLine($"✓ Inserted '{text}' at position {position}");
     }
 
     public void DeleteText(int position, int length)
     {
         var deleteCommand = new DeleteCommand(_document, position, length);
-        _commandOperator.ExecuteCommand(deleteCommand);
+        _document = _commandOperator.ExecuteCommand(deleteCommand);
         Console.WriteLine($"✓ Deleted {length} characters at position {position}");
     }
 
     public void ReplaceText(int position, int length, string newText)
     {
         var replaceCommand = new ReplaceCommand(_document, position, length, newText);
-        _commandOperator.ExecuteCommand(replaceCommand);
+        _document = _commandOperator.ExecuteCommand(replaceCommand);
         Console.WriteLine(
             $"✓ Replaced {length} characters at position {position} with '{newText}'"
         );
@@ -50,7 +46,8 @@ public class TextEditor(ICommandOperator commandOperator)
         var reversedOperation = _commandOperator.UndoLastCommand();
         if (reversedOperation != null)
         {
-            Console.WriteLine($"✓ Undid operation: {reversedOperation}");
+            _document = reversedOperation.Value.Target;
+            Console.WriteLine($"✓ Undid operation: {reversedOperation.Value.Command}");
         }
     }
 
@@ -59,14 +56,15 @@ public class TextEditor(ICommandOperator commandOperator)
         var reversedOperation = _commandOperator.RedoLastCommand();
         if (reversedOperation != null)
         {
-            Console.WriteLine($"✓ Redid operation: {reversedOperation}");
+            _document = reversedOperation.Value.Target;
+            Console.WriteLine($"✓ Redid operation: {reversedOperation.Value.Command}");
         }
     }
 
     public void AttemptMacro()
     {
         var macroCommand = new CureTextCommand(_document);
-        _commandOperator.ExecuteCommand(macroCommand);
+        _document = _commandOperator.ExecuteCommand(macroCommand);
         Console.WriteLine(
             "✓ Macro executed: Cure text (replaced ':' with '@' and spaces with '_')"
         );
@@ -76,11 +74,12 @@ public class TextEditor(ICommandOperator commandOperator)
     {
         _commandOperator.QueueCommand(
             new MacroCommand(
+                _document,
                 [
-                    new InsertCommand(_document, 0, "Queued "),
-                    new InsertCommand(_document, 7, "operations "),
-                    new ReplaceCommand(_document, 7, 11, "commands "),
-                    new InsertCommand(_document, 16, ": "),
+                    doc => new InsertCommand(doc, 0, "Queued "),
+                    doc => new InsertCommand(doc, 7, "operations "),
+                    doc => new ReplaceCommand(doc, 7, 11, "commands "),
+                    doc => new InsertCommand(doc, 16, ": "),
                 ]
             )
         );
@@ -90,7 +89,12 @@ public class TextEditor(ICommandOperator commandOperator)
 
     public void ApplyChanges()
     {
-        _commandOperator.ExecuteQueuedCommands();
+        var lastResult = _commandOperator.ExecuteQueuedCommands();
+        if (lastResult != null)
+        {
+            _document = lastResult;
+            Console.WriteLine("✓ Applied queued changes");
+        }
     }
 
     public void Clear()

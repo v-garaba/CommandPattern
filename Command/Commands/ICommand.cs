@@ -4,7 +4,8 @@ namespace Command.Commands;
 /// Represents a command that can be executed and undone.
 /// Implements the Command design pattern for encapsulating operations.
 /// </summary>
-public interface ICommand
+public interface ICommand<TTarget>
+    where TTarget : notnull
 {
     /// <summary>
     /// Gets a human-readable description of the command.
@@ -14,12 +15,10 @@ public interface ICommand
     /// <summary>
     /// Executes the command, performing the operation on the target.
     /// </summary>
-    void Execute();
+    TTarget Execute();
 
     /// <summary>
     /// Undoes the command, reverting the operation performed by Execute.
     /// </summary>
-    void Undo();
-
-    string? ToString() => Description;
+    TTarget Undo();
 }

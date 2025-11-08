@@ -15,11 +15,15 @@ public static class Registrations
     /// <returns>An IServiceProvider containing the registered services.</returns>
     public static IServiceCollection RegisterCommand(this IServiceCollection services)
     {
-        services.AddScoped<ICommandOperator, CommandOperator>();
-        services.AddScoped<ICommandExecuter>(s => s.GetRequiredService<ICommandOperator>());
-        services.AddScoped<ICommandQueuer>(s => s.GetRequiredService<ICommandOperator>());
-        services.AddTransient<IManagesHistory, HistoryManager>();
-        services.AddTransient<ICommandQueue, QueueManager>();
+        services.AddScoped<ICommandOperator<Document>, CommandOperator<Document>>();
+        services.AddScoped<ICommandExecuter<Document>>(s =>
+            s.GetRequiredService<ICommandOperator<Document>>()
+        );
+        services.AddScoped<ICommandQueuer<Document>>(s =>
+            s.GetRequiredService<ICommandOperator<Document>>()
+        );
+        services.AddTransient<IManagesHistory<Document>, HistoryManager<Document>>();
+        services.AddTransient<ICommandQueue<Document>, QueueManager<Document>>();
         services.AddTransient<Document>();
         services.AddTransient<TextEditor>();
         return services;

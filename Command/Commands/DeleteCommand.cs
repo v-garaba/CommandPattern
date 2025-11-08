@@ -2,27 +2,33 @@ using Command.Validation;
 
 namespace Command.Commands;
 
-internal sealed class DeleteCommand(Document document, int position, int length) : ICommand
+internal sealed class DeleteCommand(Document document, int position, int length)
+    : ICommand<Document>
 {
-    private readonly Document _document = document.AssertNotNull();
+    private readonly Document _document = document;
     private readonly int _position = position.AssertPositive();
     private readonly int _length = length.AssertPositive();
     private string _undoDeletedText = string.Empty;
 
     /// <inheritdoc/>
-    public void Execute()
+    public Document Execute()
     {
-        _undoDeletedText = _document.GetText(_position, _length);
-        _document.DeleteText(_position, _length);
+        var doc = _document.Clone();
+        _undoDeletedText = doc.GetText(_position, _length);
+        doc = doc.DeleteText(_position, _length);
+        return doc;
     }
 
     /// <inheritdoc/>
-    public void Undo()
+    public Document Undo()
     {
-        _document.InsertText(_position, _undoDeletedText);
+        return _document.Clone();
     }
 
     /// <inheritdoc/>
     public string Description =>
         $"Delete {_length} characters at position {_position} (was: '{_undoDeletedText}')";
+
+    /// <inheritdoc/>
+    public override string? ToString() => Description;
 }

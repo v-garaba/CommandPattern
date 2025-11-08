@@ -1,72 +1,57 @@
 namespace Command.Commands;
 
-internal sealed class CureTextCommand(Document document) : ICommand
+internal sealed class CureTextCommand(Document document) : ICommand<Document>
 {
-    private Document _document = document ?? throw new ArgumentNullException(nameof(document));
-    private List<int> _foundColumns = [];
-    private List<int> _foundSpaces = [];
+    private readonly Document _document = document;
 
     /// <inheritdoc/>
-    public void Execute()
+    public Document Execute()
     {
+        var doc = _document.Clone();
         int[] foundColumns =
         [
-            .. _document
+            .. doc
                 .Content.Select((c, i) => (Char: c, Index: i))
                 .Where(t => t.Char == ':')
                 .Select(t => t.Index),
         ];
 
+        if (foundColumns.Length != 0)
+        {
+            foreach (var columnIndex in foundColumns)
+            {
+                doc = doc.ReplaceText(columnIndex, 1, "@");
+            }
+        }
+
         int[] foundSpaces =
         [
-            .. _document
+            .. doc
                 .Content.Select((c, i) => (Char: c, Index: i))
                 .Where(t => t.Char == ' ')
                 .Select(t => t.Index),
         ];
 
-        if (foundColumns.Any())
-        {
-            foreach (var columnIndex in foundColumns)
-            {
-                _document.ReplaceText(columnIndex, 1, "@");
-                _foundColumns.Add(columnIndex);
-            }
-        }
-
-        if (foundSpaces.Any())
+        if (foundSpaces.Length != 0)
         {
             foreach (var spaceIndex in foundSpaces)
             {
-                _document.ReplaceText(spaceIndex, 1, "_");
-                _foundSpaces.Add(spaceIndex);
+                doc = doc.ReplaceText(spaceIndex, 1, "_");
             }
         }
+
+        return doc;
     }
 
     /// <inheritdoc/>
-    public void Undo()
+    public Document Undo()
     {
-        if (_foundColumns.Any())
-        {
-            foreach (var columnIndex in _foundColumns)
-            {
-                _document.ReplaceText(columnIndex, 1, ":");
-            }
-            _foundColumns.Clear();
-        }
-
-        if (_foundSpaces.Any())
-        {
-            foreach (var spaceIndex in _foundSpaces)
-            {
-                _document.ReplaceText(spaceIndex, 1, " ");
-            }
-            _foundSpaces.Clear();
-        }
+        return _document.Clone();
     }
 
     /// <inheritdoc/>
-    public string Description =>
-        $"Cure text (replaced {_foundColumns.Count} columns and {_foundSpaces.Count} spaces)";
+    public string Description => $"Cure text by replacing ':' with '@' and ' ' with '_'";
+
+    /// <inheritdoc/>
+    public override string? ToString() => Description;
 }

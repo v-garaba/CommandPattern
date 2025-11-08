@@ -2,16 +2,17 @@ using Command.Commands;
 
 namespace Command.Queues;
 
-internal sealed class QueueManager : ICommandQueue
+internal sealed class QueueManager<TTarget> : ICommandQueue<TTarget>
+    where TTarget : notnull
 {
-    private readonly Queue<ICommand> _commandQueue = new();
+    private readonly Queue<ICommand<TTarget>> _commandQueue = new();
 
-    public void Enqueue(ICommand command)
+    public void Enqueue(ICommand<TTarget> command)
     {
         _commandQueue.Enqueue(command);
     }
 
-    public ICommand? Dequeue()
+    public ICommand<TTarget>? Dequeue()
     {
         _commandQueue.TryDequeue(out var command);
         return command;

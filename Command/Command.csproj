@@ -10,4 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.9" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Command.NUnit" />
+  </ItemGroup>
 </Project>

@@ -3,15 +3,16 @@ using Command.Commands;
 
 namespace Command.History;
 
-internal sealed class HistoryManager : IManagesHistory
+internal sealed class HistoryManager<TTarget> : IManagesHistory<TTarget>
+    where TTarget : notnull
 {
     private const int MaxHistorySize = 20;
-    private readonly Stack<ICommand> _commandStack = new();
-    private readonly Stack<ICommand> _redoStack = new();
-    private ImmutableArray<(CommandStatus Status, ICommand Command)> _historicalLog = [];
+    private readonly Stack<ICommand<TTarget>> _commandStack = new();
+    private readonly Stack<ICommand<TTarget>> _redoStack = new();
+    private ImmutableArray<(CommandStatus Status, ICommand<TTarget> Command)> _historicalLog = [];
 
     /// <inheritdoc/>
-    public void AddCommand(ICommand command)
+    public void AddCommand(ICommand<TTarget> command)
     {
         _commandStack.Push(command);
         _historicalLog = _historicalLog.Add((CommandStatus.Executed, command));
@@ -24,28 +25,28 @@ internal sealed class HistoryManager : IManagesHistory
     }
 
     /// <inheritdoc/>
-    public ICommand? Undo()
+    public (TTarget Target, ICommand<TTarget> Command)? Undo()
     {
         if (_commandStack.TryPop(out var command))
         {
-            command.Undo();
+            var target = command.Undo();
             _redoStack.Push(command);
             _historicalLog = _historicalLog.Add((CommandStatus.Undone, command));
-            return command;
+            return (target, command);
         }
 
         return null;
     }
 
     /// <inheritdoc/>
-    public ICommand? Redo()
+    public (TTarget Target, ICommand<TTarget> Command)? Redo()
     {
         if (_redoStack.TryPop(out var command))
         {
-            command.Execute();
+            var target = command.Execute();
             _commandStack.Push(command);
             _historicalLog = _historicalLog.Add((CommandStatus.Redone, command));
-            return command;
+            return (target, command);
         }
         return null;
     }

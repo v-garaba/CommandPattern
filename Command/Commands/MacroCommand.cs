@@ -1,28 +1,43 @@
 namespace Command.Commands;
 
-internal sealed class MacroCommand(IEnumerable<ICommand> commands) : ICommand
+internal sealed class MacroCommand(
+    Document document,
+    IEnumerable<Func<Document, ICommand<Document>>> commandFactories
+) : ICommand<Document>
 {
-    private readonly IEnumerable<ICommand> _commands = commands;
+    private readonly Document _document = document;
+    private readonly IEnumerable<Func<Document, ICommand<Document>>> _commandFactories =
+        commandFactories;
+    private readonly List<ICommand<Document>> _executedCommands = new();
 
     /// <inheritdoc/>
-    public void Execute()
+    public Document Execute()
     {
-        foreach (var command in _commands)
+        _executedCommands.Clear();
+        var currentDoc = _document;
+
+        foreach (var factory in _commandFactories)
         {
-            command.Execute();
+            var command = factory(currentDoc);
+            currentDoc = command.Execute();
+            _executedCommands.Add(command);
         }
+
+        return currentDoc;
     }
 
     /// <inheritdoc/>
-    public void Undo()
+    public Document Undo()
     {
-        foreach (var command in _commands.Reverse())
-        {
-            command.Undo();
-        }
+        return _document.Clone();
     }
 
     /// <inheritdoc/>
     public string Description =>
-        $"Macro Command: {string.Join(", ", _commands.Select(c => c.Description))}";
+        _executedCommands.Count > 0
+            ? $"Macro Command: {string.Join(", ", _executedCommands.Select(c => c.Description))}"
+            : "Macro Command: (not executed)";
+
+    /// <inheritdoc/>
+    public override string? ToString() => Description;
 }
