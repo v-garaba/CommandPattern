@@ -51,9 +51,11 @@ public sealed class Document()
         return _text.ToString(position, length);
     }
 
-    public void Clear()
+    public Document Clear()
     {
-        _text.Clear();
+        var document = Clone();
+        document._text.Clear();
+        return document;
     }
 
     public override string ToString() => _text.ToString();

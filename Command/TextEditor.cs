@@ -99,7 +99,7 @@ public class TextEditor(ICommandOperator<Document> commandOperator)
 
     public void Clear()
     {
-        _document.Clear();
+        _document = _document.Clear();
         _commandOperator.Clear();
         _commandOperator.ClearQueue();
         Console.WriteLine("✓ Document and history cleared");
