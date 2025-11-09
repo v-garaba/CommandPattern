@@ -6,76 +6,80 @@ namespace Command.NUnit.Commands;
 public class ReplaceCommandTests
 {
     [Test]
-    public void Execute_ShouldReplaceText()
+    public async Task Execute_ShouldReplaceText()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello World");
+        await document.InsertTextAsync(0, "Hello World");
         var command = new ReplaceCommand(document, 0, 5, "Hi");
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hi World"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hi World"));
     }
 
     [Test]
-    public void Execute_ShouldReplaceWithLongerText()
+    public async Task Execute_ShouldReplaceWithLongerText()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hi");
+        await document.InsertTextAsync(0, "Hi");
         var command = new ReplaceCommand(document, 0, 2, "Hello");
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello"));
     }
 
     [Test]
-    public void Execute_ShouldReplaceInMiddle()
+    public async Task Execute_ShouldReplaceInMiddle()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello Big World");
+        await document.InsertTextAsync(0, "Hello Big World");
         var command = new ReplaceCommand(document, 6, 3, "Small");
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello Small World"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello Small World"));
     }
 
     [Test]
-    public void Undo_ShouldReturnOriginalState()
+    public async Task Undo_ShouldReturnOriginalState()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello World");
+        await document.InsertTextAsync(0, "Hello World");
         var command = new ReplaceCommand(document, 0, 5, "Hi");
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Act
-        command.Undo();
+        await command.UndoAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello World"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello World"));
     }
 
     [Test]
-    public void Description_ShouldIncludeReplacedText()
+    public async Task Description_ShouldIncludeReplacedText()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello World");
+        await document.InsertTextAsync(0, "Hello World");
         var command = new ReplaceCommand(document, 0, 5, "Hi");
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
         var description = command.Description;
 
         // Assert

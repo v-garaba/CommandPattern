@@ -4,7 +4,7 @@ using Command.Validation;
 namespace Command.Commands;
 
 internal sealed class DeleteCommand(Document document, int position, int length)
-    : ICommand<Document>
+    : ICommandAsync
 {
     private readonly Document _document = document.AssertNotNull();
     private readonly ISnapshot _snapshot = document.CreateSnapshot();
@@ -12,15 +12,16 @@ internal sealed class DeleteCommand(Document document, int position, int length)
     private readonly int _length = length.AssertPositive();
 
     /// <inheritdoc/>
-    public void Execute()
+    public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        _document.DeleteText(_position, _length);
+        return await _document.DeleteTextAsync(_position, _length, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public void Undo()
+    public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
     {
-        _document.RestoreSnapshot(_snapshot);
+        await _document.RestoreSnapshot(_snapshot, cancellationToken);
+        return true;
     }
 
     /// <inheritdoc/>

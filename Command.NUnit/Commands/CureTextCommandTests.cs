@@ -6,94 +6,100 @@ namespace Command.NUnit.Commands;
 public class CureTextCommandTests
 {
     [Test]
-    public void Execute_ShouldReplaceColons()
+    public async Task Execute_ShouldReplaceColons()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello:World");
+        await document.InsertTextAsync(0, "Hello:World");
         var command = new CureTextCommand(document);
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello@World"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello@World"));
     }
 
     [Test]
-    public void Execute_ShouldReplaceSpaces()
+    public async Task Execute_ShouldReplaceSpaces()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello World");
+        await document.InsertTextAsync(0, "Hello World");
         var command = new CureTextCommand(document);
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello_World"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello_World"));
     }
 
     [Test]
-    public void Execute_ShouldReplaceColonsAndSpaces()
+    public async Task Execute_ShouldReplaceColonsAndSpaces()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello: World Test");
+        await document.InsertTextAsync(0, "Hello: World Test");
         var command = new CureTextCommand(document);
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello@_World_Test"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello@_World_Test"));
     }
 
     [Test]
-    public void Execute_WithMultipleColons_MayHaveIndexShiftingIssue()
+    public async Task Execute_WithMultipleColons_MayHaveIndexShiftingIssue()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "a:b:c");
+        await document.InsertTextAsync(0, "a:b:c");
         var command = new CureTextCommand(document);
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("a@b@c"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("a@b@c"));
     }
 
     [Test]
-    public void Execute_WithNoSpecialCharacters_ShouldReturnUnchanged()
+    public async Task Execute_WithNoSpecialCharacters_ShouldReturnUnchanged()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "HelloWorld");
+        await document.InsertTextAsync(0, "HelloWorld");
         var command = new CureTextCommand(document);
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("HelloWorld"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("HelloWorld"));
     }
 
     [Test]
-    public void Undo_ShouldReturnOriginalState()
+    public async Task Undo_ShouldReturnOriginalState()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello: World");
+        await document.InsertTextAsync(0, "Hello: World");
         var command = new CureTextCommand(document);
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Act
-        command.Undo();
+        await command.UndoAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello: World"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello: World"));
     }
 
     [Test]

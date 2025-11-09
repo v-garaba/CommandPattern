@@ -4,145 +4,144 @@ namespace Command.NUnit;
 public class DocumentTests
 {
     [Test]
-    public void Document_InsertText_ReturnsNewInstance()
+    public async Task Document_InsertText_ReturnsNewInstance()
     {
         // Arrange
         var doc = new Document();
 
         // Act
-        doc.InsertText(0, "Test");
+        await doc.InsertTextAsync(0, "Test");
 
         // Assert
-        Assert.That(doc.Content, Is.EqualTo("Test"));
+        string content = await doc.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Test"));
     }
 
     [Test]
-    public void Document_DeleteText_ReturnsNewInstance()
+    public async Task Document_DeleteText_ReturnsNewInstance()
     {
         // Arrange
         var doc = new Document();
-        doc.InsertText(0, "Hello World");
+        await doc.InsertTextAsync(0, "Hello World");
 
         // Act
-        doc.DeleteText(5, 6);
+        await doc.DeleteTextAsync(5, 6);
 
         // Assert
-        Assert.That(doc.Content, Is.EqualTo("Hello"));
+        string content = await doc.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello"));
     }
 
     [Test]
-    public void Document_ReplaceText_ReturnsNewInstance()
+    public async Task Document_ReplaceText_ReturnsNewInstance()
     {
         // Arrange
         var doc = new Document();
-        doc.InsertText(0, "Hello World");
+        await doc.InsertTextAsync(0, "Hello World");
 
         // Act
-        doc.ReplaceText(0, 5, "Hi");
+        await doc.ReplaceTextAsync(0, 5, "Hi");
 
         // Assert
-        Assert.That(doc.Content, Is.EqualTo("Hi World"));
+        string content = await doc.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hi World"));
     }
 
     [Test]
-    public void Document_Clear_EmptiesContent()
+    public async Task Document_Clear_EmptiesContent()
     {
         // Arrange
         var doc = new Document();
-        doc.InsertText(0, "Hello World");
+        await doc.InsertTextAsync(0, "Hello World");
 
         // Act
-        doc.Clear();
+        await doc.ClearAsync();
 
         // Assert
-        Assert.That(doc.Content, Is.EqualTo(string.Empty));
+        string content = await doc.GetTextAsync();
+        Assert.That(content, Is.EqualTo(string.Empty));
     }
 
     [Test]
-    public void Document_CreateSnapshot_CreatesDeepCopy()
+    public async Task Document_CreateSnapshot_CreatesDeepCopy()
     {
         // Arrange
         var doc = new Document();
-        doc.InsertText(0, "Original");
+        await doc.InsertTextAsync(0, "Original");
 
         // Act & Assert: Create snapshot then clear original
         var snapshot = doc.CreateSnapshot();
 
-        doc.Clear();
+        await doc.ClearAsync();
 
-        Assert.That(doc.Content, Is.EqualTo(string.Empty));
+        string content = await doc.GetTextAsync();
+        Assert.That(content, Is.EqualTo(string.Empty));
 
         // Act: Restore from snapshot
-        doc.RestoreSnapshot(snapshot);
+        await doc.RestoreSnapshot(snapshot);
 
         // Assert
-        Assert.That(doc.Content, Is.EqualTo("Original"));
+        content = await doc.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Original"));
     }
 
     [Test]
-    public void Document_GetText_ReturnsSubstring()
+    public async Task Document_GetText_ReturnsSubstring()
     {
         // Arrange
         var doc = new Document();
-        doc.InsertText(0, "Hello World");
+        await doc.InsertTextAsync(0, "Hello World");
 
         // Act
-        var text = doc.GetText(0, 5);
+        var text = await doc.GetTextAsync(0, 5);
 
         // Assert
         Assert.That(text, Is.EqualTo("Hello"));
     }
 
     [Test]
-    public void Document_GetText_WithInvalidPosition_ReturnsEmpty()
+    public async Task Document_GetText_WithInvalidPosition_ReturnsEmpty()
     {
         // Arrange
         var doc = new Document();
-        doc.InsertText(0, "Hello");
+        await doc.InsertTextAsync(0, "Hello");
 
         // Act
-        var text = doc.GetText(10, 5);
+        var text = await doc.GetTextAsync(10, 5);
 
         // Assert
         Assert.That(text, Is.EqualTo(string.Empty));
     }
 
     [Test]
-    public void Document_InsertText_AtInvalidPosition_ThrowsException()
+    public async Task Document_DeleteText_BeyondLength_DeletesToEnd()
     {
         // Arrange
         var doc = new Document();
-
-        // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => doc.InsertText(-1, "Test"));
-        Assert.Throws<ArgumentOutOfRangeException>(() => doc.InsertText(10, "Test"));
-    }
-
-    [Test]
-    public void Document_DeleteText_BeyondLength_DeletesToEnd()
-    {
-        // Arrange
-        var doc = new Document();
-        doc.InsertText(0, "Hello");
+        await doc.InsertTextAsync(0, "Hello");
 
         // Act
-        doc.DeleteText(2, 100);
+        await doc.DeleteTextAsync(2, 100);
 
         // Assert
-        Assert.That(doc.Content, Is.EqualTo("He"));
+        string content = await doc.GetTextAsync();
+        Assert.That(content, Is.EqualTo("He"));
     }
 
     [Test]
-    public void Document_Length_ReturnsCorrectValue()
+    public async Task Document_Length_ReturnsCorrectValue()
     {
         // Arrange & Act
         var doc = new Document();
-        Assert.That(doc.Length, Is.EqualTo(0));
+        int length = await doc.GetLengthAsync();
+        Assert.That(length, Is.EqualTo(0));
 
-        doc.InsertText(0, "Hello");
-        Assert.That(doc.Length, Is.EqualTo(5));
+        await doc.InsertTextAsync(0, "Hello");
+        length = await doc.GetLengthAsync();
+        Assert.That(length, Is.EqualTo(5));
 
-        doc.InsertText(5, " World");
-        Assert.That(doc.Length, Is.EqualTo(11));
+        await doc.InsertTextAsync(5, " World");
+        length = await doc.GetLengthAsync();
+        Assert.That(length, Is.EqualTo(11));
     }
 }

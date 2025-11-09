@@ -1,37 +1,55 @@
+using System.Threading.Tasks;
 using Command.Commands;
 using Command.Operations;
 using Command.Validation;
 
 namespace Command;
 
-public class TextEditor(ICommandOperator<Document> commandOperator)
+public class TextEditor(ICommandOperator commandOperator)
 {
-    private readonly ICommandOperator<Document> _commandOperator = commandOperator.AssertNotNull();
-    private Document _document = new();
+    private readonly ICommandOperator _commandOperator = commandOperator.AssertNotNull();
+    private readonly Document _document = new();
 
-    public int DocumentLength => _document.Length;
-
-    public void InsertText(int position, string text)
+    public async Task InsertTextAsync(int position, string text, CancellationToken cancellationToken)
     {
         var insertCommand = new InsertCommand(_document, position, text);
-        _commandOperator.ExecuteCommand(insertCommand);
-        Console.WriteLine($"✓ Inserted '{text}' at position {position}");
+        bool success = await _commandOperator.ExecuteCommandAsync(insertCommand, cancellationToken);
+        if (success)
+        {
+            Console.WriteLine($"✓ Inserted '{text}' at position {position}");
+        }
+        else
+        {
+            Console.WriteLine($"✗ Failed to insert '{text}' at position {position}");
+        }
     }
 
-    public void DeleteText(int position, int length)
+    public async Task DeleteTextAsync(int position, int length, CancellationToken cancellationToken)
     {
         var deleteCommand = new DeleteCommand(_document, position, length);
-        _commandOperator.ExecuteCommand(deleteCommand);
-        Console.WriteLine($"✓ Deleted {length} characters at position {position}");
+        bool success = await _commandOperator.ExecuteCommandAsync(deleteCommand, cancellationToken);
+        if (success)
+        {
+            Console.WriteLine($"✓ Deleted {length} characters at position {position}");
+        }
+        else
+        {
+            Console.WriteLine($"✗ Failed to delete {length} characters at position {position}");
+        }
     }
 
-    public void ReplaceText(int position, int length, string newText)
+    public async Task ReplaceTextAsync(int position, int length, string newText, CancellationToken cancellationToken)
     {
         var replaceCommand = new ReplaceCommand(_document, position, length, newText);
-        _commandOperator.ExecuteCommand(replaceCommand);
-        Console.WriteLine(
-            $"✓ Replaced {length} characters at position {position} with '{newText}'"
-        );
+        bool success = await _commandOperator.ExecuteCommandAsync(replaceCommand, cancellationToken);
+        if (success)
+        {
+            Console.WriteLine($"✓ Replaced {length} characters at position {position} with '{newText}'");
+        }
+        else
+        {
+            Console.WriteLine($"✗ Failed to replace {length} characters at position {position} with '{newText}'");
+        }
     }
 
     public void ShowOperationHistory()
@@ -41,35 +59,59 @@ public class TextEditor(ICommandOperator<Document> commandOperator)
         Console.WriteLine("=========================\n");
     }
 
-    public void AttemptUndo()
+    public async Task AttemptUndoAsync(CancellationToken cancellationToken)
     {
-        var reversedOperation = _commandOperator.UndoLastCommand();
-        if (reversedOperation != null)
+        var reversedOperation = await _commandOperator.UndoLastCommandAsync(cancellationToken);
+
+        if (reversedOperation == null)
+        {
+            Console.WriteLine("✗ No operation to undo");
+            return;
+        }
+
+        if (reversedOperation == true)
         {
             Console.WriteLine($"✓ Undid operation: {reversedOperation}");
         }
-    }
-
-    public void AttemptRedo()
-    {
-        var reversedOperation = _commandOperator.RedoLastCommand();
-        if (reversedOperation != null)
+        else
         {
-            Console.WriteLine($"✓ Redid operation: {reversedOperation}");
+            Console.WriteLine("✗ Undo operation failed");
         }
     }
 
-    public void AttemptMacro()
+    public async Task AttemptRedoAsync(CancellationToken cancellationToken)
+    {
+        var redoneOperation = await _commandOperator.RedoLastCommandAsync(cancellationToken);
+
+        if (redoneOperation == null)
+        {
+            Console.WriteLine("✗ No operation to redo");
+            return;
+        }
+
+        if (redoneOperation == true)
+        {
+            Console.WriteLine($"✓ Redid operation: {redoneOperation}");
+        }
+        else
+        {
+            Console.WriteLine("✗ Redo operation failed");
+        }
+    }
+
+    public async Task AttemptMacroAsync(CancellationToken cancellationToken)
     {
         var macroCommand = new CureTextCommand(_document);
-        _commandOperator.ExecuteCommand(macroCommand);
+        await _commandOperator.ExecuteCommandAsync(macroCommand, cancellationToken);
         Console.WriteLine(
             "✓ Macro executed: Cure text (replaced ':' with '@' and spaces with '_')"
         );
     }
 
-    public void AttemptQueueOperations()
+    public async Task AttemptQueueOperationsAsync()
     {
+        await Task.Yield();
+
         _commandOperator.QueueCommand(
             new MacroCommand(
                 _document,
@@ -82,34 +124,53 @@ public class TextEditor(ICommandOperator<Document> commandOperator)
             )
         );
 
+        _commandOperator.QueueCommand(
+            new InsertCommand(_document, 0, "LAST WORD.")
+        );
+
         Console.WriteLine("✓ Operations queued for later execution");
     }
 
-    public void ApplyChanges()
+    public async Task ApplyChangesAsync(CancellationToken cancellationToken)
     {
-        _commandOperator.ExecuteQueuedCommands();
-        Console.WriteLine("✓ Executed all queued operations");
+        bool success = await _commandOperator.ExecuteQueuedCommandsAsync(cancellationToken);
+
+        if (success)
+        {
+            Console.WriteLine("✓ Executed all queued operations");
+        }
+        else
+        {
+            Console.WriteLine("✗ Failed to execute some queued operations");
+        }
     }
 
-    public void Clear()
+    public async Task<int> DocumentLengthAsync(CancellationToken cancellationToken = default)
     {
-        _document.Clear();
+        return await _document.GetLengthAsync(cancellationToken);
+    }
+
+    public async Task ClearAsync(CancellationToken cancellationToken)
+    {
+        await _document.ClearAsync(cancellationToken);
         _commandOperator.Clear();
         _commandOperator.ClearQueue();
         Console.WriteLine("✓ Document and history cleared");
     }
 
-    public void ShowCurrentState()
+    public async Task ShowCurrentStateAsync(CancellationToken cancellationToken = default)
     {
         Console.WriteLine($"\n--- CURRENT DOCUMENT STATE ---");
-        Console.WriteLine($"Length: {_document.Length} characters");
-        if (string.IsNullOrEmpty(_document.Content))
+        string text = await _document.GetTextAsync(cancellationToken);
+        int length = await _document.GetLengthAsync(cancellationToken);
+        Console.WriteLine($"Length: {length} characters");
+        if (string.IsNullOrEmpty(text))
         {
             Console.WriteLine("Content: [Empty]");
         }
         else
         {
-            Console.WriteLine($"Content: \"{_document.Content}\"");
+            Console.WriteLine($"Content: \"{text}\"");
         }
         Console.WriteLine("-----------------------------\n");
     }

@@ -5,26 +5,25 @@ namespace Command.Operations;
 /// <summary>
 /// Interface for executing commands and managing their history.
 /// </summary>
-public interface ICommandExecuter<TTarget>
-    where TTarget : notnull
+public interface ICommandExecuter
 {
     /// <summary>
     /// Executes a command and adds it to the history.
     /// </summary>
     /// <param name="command">The command to execute.</param>
-    void ExecuteCommand(ICommand<TTarget> command);
+    Task<bool> ExecuteCommandAsync(ICommandAsync command, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Undoes the last executed command.
     /// </summary>
-    /// <returns>The command that was undone, or null if there is no command to undo.</returns>
-    ICommand<TTarget>? UndoLastCommand();
+    /// <returns>Whether the undo was successful, or null if there is no command to undo.</returns>
+    Task<bool?> UndoLastCommandAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Redoes the last undone command.
     /// </summary>
-    /// <returns>The command that was redone, or null if there is no command to redo.</returns>
-    ICommand<TTarget>? RedoLastCommand();
+    /// <returns>Whether the redo was successful, or null if there is no command to redo.</returns>
+    Task<bool?> RedoLastCommandAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Returns a string representation of the command history.

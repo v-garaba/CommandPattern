@@ -1,10 +1,11 @@
+using System.Threading.Tasks;
 using Command.Memento;
 using Command.Validation;
 
 namespace Command.Commands;
 
 internal sealed class InsertCommand(Document document, int position, string text)
-    : ICommand<Document>
+    : ICommandAsync
 {
     private readonly Document _document = document.AssertNotNull();
     private readonly ISnapshot _snapshot = document.CreateSnapshot();
@@ -12,15 +13,16 @@ internal sealed class InsertCommand(Document document, int position, string text
     private readonly string _text = text.AssertNotEmpty();
 
     /// <inheritdoc/>
-    public void Execute()
+    public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        _document.InsertText(_position, _text);
+        return await _document.InsertTextAsync(_position, _text, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public void Undo()
+    public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
     {
-        _document.RestoreSnapshot(_snapshot);
+        await _document.RestoreSnapshot(_snapshot, cancellationToken);
+        return true;
     }
 
     /// <inheritdoc/>

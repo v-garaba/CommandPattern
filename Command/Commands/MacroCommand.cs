@@ -5,31 +5,38 @@ namespace Command.Commands;
 
 internal sealed class MacroCommand(
     Document document,
-    IEnumerable<Func<Document, ICommand<Document>>> commandFactories
-) : ICommand<Document>
+    IEnumerable<Func<Document, ICommandAsync>> commandFactories
+) : ICommandAsync
 {
     private readonly Document _document = document.AssertNotNull();
     private readonly ISnapshot _snapshot = document.CreateSnapshot();
-    private readonly IEnumerable<Func<Document, ICommand<Document>>> _commandFactories =
+    private readonly IEnumerable<Func<Document, ICommandAsync>> _commandFactories =
         commandFactories;
-    private readonly List<ICommand<Document>> _executedCommands = new();
+    private readonly List<ICommandAsync> _executedCommands = [];
 
     /// <inheritdoc/>
-    public void Execute()
+    public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
     {
+        bool result = true;
         _executedCommands.Clear();
         foreach (var factory in _commandFactories)
         {
             var command = factory(_document);
-            command.Execute();
+            result &= await command.ExecuteAsync(cancellationToken);
             _executedCommands.Add(command);
+
+            if (!result)
+                break;
         }
+
+        return result;
     }
 
     /// <inheritdoc/>
-    public void Undo()
+    public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
     {
-        _document.RestoreSnapshot(_snapshot);
+        await _document.RestoreSnapshot(_snapshot, cancellationToken);
+        return true;
     }
 
     /// <inheritdoc/>

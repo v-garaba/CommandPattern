@@ -8,7 +8,7 @@ internal sealed class ReplaceCommand(
     int position,
     int length,
     string replaceText
-) : ICommand<Document>
+) : ICommandAsync
 {
     private readonly Document _document = document.AssertNotNull();
     private readonly ISnapshot _snapshot = document.CreateSnapshot();
@@ -17,15 +17,16 @@ internal sealed class ReplaceCommand(
     private readonly string _replaceText = replaceText.AssertNotEmpty();
 
     /// <inheritdoc/>
-    public void Execute()
+    public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        _document.ReplaceText(_position, _length, _replaceText);
+        return await _document.ReplaceTextAsync(_position, _length, _replaceText, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public void Undo()
+    public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
     {
-        _document.RestoreSnapshot(_snapshot);
+        await _document.RestoreSnapshot(_snapshot, cancellationToken);
+        return true;
     }
 
     /// <inheritdoc/>

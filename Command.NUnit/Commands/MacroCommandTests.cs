@@ -6,29 +6,30 @@ namespace Command.NUnit.Commands;
 public class MacroCommandTests
 {
     [Test]
-    public void Execute_WithEmptyCommands_ShouldReturnClonedDocument()
+    public async Task Execute_WithEmptyCommands_ShouldReturnClonedDocument()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Test");
-        var command = new MacroCommand(document, new List<Func<Document, ICommand<Document>>>());
+        await document.InsertTextAsync(0, "Test");
+        var command = new MacroCommand(document, new List<Func<Document, ICommandAsync>>());
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Test"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Test"));
     }
 
     [Test]
-    public void Execute_WithSameDocumentState_ThrowsOnInvalidPositions()
+    public async Task Execute_WithSameDocumentState_ThrowsOnInvalidPositions()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Start");
+        await document.InsertTextAsync(0, "Start");
 
         // Commands that would work if chained
-        var commands = new List<Func<Document, ICommand<Document>>>
+        var commands = new List<Func<Document, ICommandAsync>>
         {
             doc => new InsertCommand(doc, 5, " A"),
             doc => new InsertCommand(doc, 7, "B"),
@@ -38,39 +39,41 @@ public class MacroCommandTests
         var macroCommand = new MacroCommand(document, commands);
 
         // Act & Assert
-        macroCommand.Execute();
+        await macroCommand.ExecuteAsync();
 
-        Assert.That(document.Content, Is.EqualTo("Start ABC"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Start ABC"));
     }
 
     [Test]
-    public void Undo_ShouldReturnOriginalState()
+    public async Task Undo_ShouldReturnOriginalState()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Test");
+        await document.InsertTextAsync(0, "Test");
 
-        var commands = new List<Func<Document, ICommand<Document>>>
+        var commands = new List<Func<Document, ICommandAsync>>
         {
             doc => new DeleteCommand(doc, 0, 2),
         };
 
         var macroCommand = new MacroCommand(document, commands);
-        macroCommand.Execute();
+        await macroCommand.ExecuteAsync();
 
         // Act
-        macroCommand.Undo();
+        await macroCommand.UndoAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Test"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Test"));
     }
 
     [Test]
-    public void Description_ShouldIncludeAllSubCommands()
+    public async Task Description_ShouldIncludeAllSubCommands()
     {
         // Arrange
         var document = new Document();
-        var commands = new List<Func<Document, ICommand<Document>>>
+        var commands = new List<Func<Document, ICommandAsync>>
         {
             doc => new InsertCommand(doc, 0, "A"),
             doc => new InsertCommand(doc, 0, "B"),
@@ -79,7 +82,7 @@ public class MacroCommandTests
         var macroCommand = new MacroCommand(document, commands);
 
         // Act
-        macroCommand.Execute();
+        await macroCommand.ExecuteAsync();
         var description = macroCommand.Description;
 
         // Assert

@@ -6,63 +6,67 @@ namespace Command.NUnit.Commands;
 public class InsertCommandTests
 {
     [Test]
-    public void Execute_ShouldInsertTextAtPosition()
+    public async Task Execute_ShouldInsertTextAtPosition()
     {
         // Arrange
         var document = new Document();
         var command = new InsertCommand(document, 0, "Hello");
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello"));
     }
 
     [Test]
-    public void Execute_ShouldInsertTextInMiddle()
+    public async Task Execute_ShouldInsertTextInMiddle()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "HelloWorld");
+        await document.InsertTextAsync(0, "HelloWorld");
         var command = new InsertCommand(document, 5, " - ");
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello - World"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello - World"));
     }
 
     [Test]
-    public void Undo_ShouldReturnOriginalState()
+    public async Task Undo_ShouldReturnOriginalState()
     {
         // Arrange
         var document = new Document();
         var command = new InsertCommand(document, 0, "Hello");
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Act
-        command.Undo();
+        await command.UndoAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo(""));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo(""));
     }
 
     [Test]
-    public void Undo_AfterMultipleEdits_ShouldReturnCapturedState()
+    public async Task Undo_AfterMultipleEdits_ShouldReturnCapturedState()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "First");
+        await document.InsertTextAsync(0, "First");
         var command = new InsertCommand(document, 5, " Second");
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Act
-        command.Undo();
+        await command.UndoAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("First"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("First"));
     }
 
     [Test]

@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Command;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         Console.WriteLine("===============================================");
         Console.WriteLine("   COMMAND EDITOR");
@@ -13,67 +14,71 @@ public class Program
 
         var serviceProvider = Registrations.BuildServiceProvider();
         var editor = serviceProvider.GetRequiredService<TextEditor>();
+        var cts = new CancellationTokenSource();
+        var cancellationToken = cts.Token;
 
         // Show current state
-        editor.ShowCurrentState();
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
         Console.WriteLine("1. BASIC OPERATIONS");
         Console.WriteLine("====================================================");
 
-        editor.InsertText(0, "Hello");
-        editor.ShowCurrentState();
+        await editor.InsertTextAsync(0, "Hello", cancellationToken);
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
-        editor.InsertText(5, " World");
-        editor.ShowCurrentState();
+        await editor.InsertTextAsync(5, " World", cancellationToken);
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
         editor.ShowOperationHistory();
 
         Console.WriteLine("2. TRYING TO UNDO OPERATIONS");
         Console.WriteLine("=============================");
-        editor.AttemptUndo();
-        editor.ShowCurrentState();
+        await editor.AttemptUndoAsync(cancellationToken);
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
         Console.WriteLine("2.1. TRYING TO UNDO THEN REDO OPERATIONS");
         Console.WriteLine("=============================");
 
-        editor.AttemptUndo();
-        editor.ShowCurrentState();
+        await editor.AttemptUndoAsync(cancellationToken);
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
-        editor.AttemptRedo();
-        editor.ShowCurrentState();
+        await editor.AttemptRedoAsync(cancellationToken);
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
         Console.WriteLine("3. MORE OPERATIONS");
         Console.WriteLine("==================");
 
-        editor.InsertText(0, "Roaring");
-        editor.InsertText(editor.DocumentLength, " tiger");
-        editor.InsertText(editor.DocumentLength, ": ");
-        editor.ShowCurrentState();
+        await editor.InsertTextAsync(0, "Roaring", cancellationToken);
 
-        editor.ReplaceText(0, 5, "Hi");
-        editor.ShowCurrentState();
+        int length = await editor.DocumentLengthAsync(cancellationToken);
+        await editor.InsertTextAsync(length, " tiger", cancellationToken);
+        await editor.InsertTextAsync(length, ": ", cancellationToken);
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
-        editor.DeleteText(2, 3);
-        editor.ShowCurrentState();
+        await editor.ReplaceTextAsync(0, 5, "Hi", cancellationToken);
+        await editor.ShowCurrentStateAsync(cancellationToken);
+
+        await editor.DeleteTextAsync(2, 3, cancellationToken);
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
         editor.ShowOperationHistory();
 
         Console.WriteLine("4. TRYING TO CREATE MACROS");
         Console.WriteLine("===========================");
-        editor.AttemptMacro();
-        editor.ShowCurrentState();
+        await editor.AttemptMacroAsync(cancellationToken);
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
         Console.WriteLine("5. TRYING TO QUEUE OPERATIONS");
         Console.WriteLine("==============================");
-        editor.AttemptQueueOperations();
-        editor.ShowCurrentState();
+        await editor.AttemptQueueOperationsAsync();
+        await editor.ShowCurrentStateAsync(cancellationToken);
 
         Console.WriteLine("6. APPLYING QUEUED OPERATIONS");
         Console.WriteLine("==============================");
-        editor.ApplyChanges();
+        await editor.ApplyChangesAsync(cancellationToken);
 
         // Final state
-        editor.ShowCurrentState();
+        await editor.ShowCurrentStateAsync(cancellationToken);
         editor.ShowOperationHistory();
     }
 }

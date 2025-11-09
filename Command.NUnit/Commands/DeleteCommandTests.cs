@@ -6,76 +6,80 @@ namespace Command.NUnit.Commands;
 public class DeleteCommandTests
 {
     [Test]
-    public void Execute_ShouldDeleteText()
+    public async Task Execute_ShouldDeleteText()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello World");
+        await document.InsertTextAsync(0, "Hello World");
         var command = new DeleteCommand(document, 5, 6);
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello"));
     }
 
     [Test]
-    public void Execute_ShouldDeleteFromBeginning()
+    public async Task Execute_ShouldDeleteFromBeginning()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello World");
+        await document.InsertTextAsync(0, "Hello World");
         var command = new DeleteCommand(document, 0, 6);
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("World"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("World"));
     }
 
     [Test]
-    public void Execute_ShouldDeleteFromEnd()
+    public async Task Execute_ShouldDeleteFromEnd()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello World");
+        await document.InsertTextAsync(0, "Hello World");
         var command = new DeleteCommand(document, 5, 6);
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello"));
     }
 
     [Test]
-    public void Undo_ShouldReturnOriginalState()
+    public async Task Undo_ShouldReturnOriginalState()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello World");
+        await document.InsertTextAsync(0, "Hello World");
         var command = new DeleteCommand(document, 5, 6);
-        command.Execute();
+        await command.ExecuteAsync();
 
         // Act
-        command.Undo();
+        await command.UndoAsync();
 
         // Assert
-        Assert.That(document.Content, Is.EqualTo("Hello World"));
+        string content = await document.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello World"));
     }
 
     [Test]
-    public void Description_ShouldIncludeDeletedText()
+    public async Task Description_ShouldIncludeDeletedText()
     {
         // Arrange
         var document = new Document();
-        document.InsertText(0, "Hello World");
+        await document.InsertTextAsync(0, "Hello World");
         var command = new DeleteCommand(document, 0, 5);
 
         // Act
-        command.Execute();
+        await command.ExecuteAsync();
         var description = command.Description;
 
         // Assert

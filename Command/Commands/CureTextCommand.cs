@@ -3,18 +3,20 @@ using Command.Validation;
 
 namespace Command.Commands;
 
-internal sealed class CureTextCommand(Document document) : ICommand<Document>
+internal sealed class CureTextCommand(Document document) : ICommandAsync
 {
     private readonly Document _document = document.AssertNotNull();
     private readonly ISnapshot _snapshot = document.CreateSnapshot();
 
     /// <inheritdoc/>
-    public void Execute()
+    public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
     {
+        bool result = true;
+        string content = await _document.GetTextAsync(cancellationToken);
         int[] foundColumns =
         [
-            .. _document
-                .Content.Select((c, i) => (Char: c, Index: i))
+            .. content
+                .Select((c, i) => (Char: c, Index: i))
                 .Where(t => t.Char == ':')
                 .Select(t => t.Index),
         ];
@@ -23,14 +25,18 @@ internal sealed class CureTextCommand(Document document) : ICommand<Document>
         {
             foreach (var columnIndex in foundColumns)
             {
-                _document.ReplaceText(columnIndex, 1, "@");
+                result &= await _document.ReplaceTextAsync(columnIndex, 1, "@", cancellationToken);
             }
         }
 
+        if (!result)
+            return false;
+
+        content = await _document.GetTextAsync(cancellationToken);
         int[] foundSpaces =
         [
-            .. _document
-                .Content.Select((c, i) => (Char: c, Index: i))
+            .. content
+                .Select((c, i) => (Char: c, Index: i))
                 .Where(t => t.Char == ' ')
                 .Select(t => t.Index),
         ];
@@ -39,15 +45,18 @@ internal sealed class CureTextCommand(Document document) : ICommand<Document>
         {
             foreach (var spaceIndex in foundSpaces)
             {
-                _document.ReplaceText(spaceIndex, 1, "_");
+                result &= await _document.ReplaceTextAsync(spaceIndex, 1, "_", cancellationToken);
             }
         }
+
+        return result;
     }
 
     /// <inheritdoc/>
-    public void Undo()
+    public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
     {
-        _document.RestoreSnapshot(_snapshot);
+        await _document.RestoreSnapshot(_snapshot, cancellationToken);
+        return true;
     }
 
     /// <inheritdoc/>

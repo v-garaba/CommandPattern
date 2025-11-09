@@ -10,46 +10,47 @@ namespace Command.Operations;
 /// Executes commands and manages their history.
 /// </summary>
 /// <param name="historyManager">The history manager to use.</param>
-internal sealed class CommandOperator<TTarget>(
-    IManagesHistory<TTarget> historyManager,
-    ICommandQueue<TTarget> commandQueue,
-    ILogger<CommandOperator<TTarget>> logger
-) : ICommandOperator<TTarget>
-    where TTarget : notnull
+internal sealed class CommandOperator(
+    IManagesHistory historyManager,
+    ICommandQueue commandQueue,
+    ILogger<CommandOperator> logger
+) : ICommandOperator
 {
-    private readonly IManagesHistory<TTarget> _historyManager = historyManager.AssertNotNull();
-    private readonly ICommandQueue<TTarget> _commandQueue = commandQueue.AssertNotNull();
-    private readonly ILogger<CommandOperator<TTarget>> _logger = logger.AssertNotNull();
+    private readonly IManagesHistory _historyManager = historyManager.AssertNotNull();
+    private readonly ICommandQueue _commandQueue = commandQueue.AssertNotNull();
+    private readonly ILogger<CommandOperator> _logger = logger.AssertNotNull();
 
     /// <inheritdoc/>
-    public void ExecuteCommand(ICommand<TTarget> command)
+    public Task<bool> ExecuteCommandAsync(ICommandAsync command, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            command.Execute();
-            _historyManager.AddCommand(command.AssertNotNull());
-        }
-        catch (Exception ex)
-        {
-            // Tell user that command execution failed but do not throw. Outside of the scope.
-            _logger.LogError(ex, "Failed to execute command: {Command}", command);
-        }
+        var result = command.ExecuteAsync(cancellationToken);
+        _historyManager.AddCommand(command.AssertNotNull());
+        return result;
     }
 
     /// <inheritdoc/>
-    public void QueueCommand(ICommand<TTarget> command)
+    public void QueueCommand(ICommandAsync command)
     {
         _commandQueue.Enqueue(command.AssertNotNull());
     }
 
     /// <inheritdoc/>
-    public void ExecuteQueuedCommands()
+    public async Task<bool> ExecuteQueuedCommandsAsync(CancellationToken cancellationToken = default)
     {
-        ICommand<TTarget>? command;
+        bool allSuccessful = true;
+        ICommandAsync? command;
         while ((command = _commandQueue.Dequeue()) != null)
         {
-            ExecuteCommand(command);
+            allSuccessful &= await ExecuteCommandAsync(command, cancellationToken);
+
+            if (!allSuccessful)
+            {
+                _logger.LogWarning($"Execution of queued commands stopped due to {command.GetType().Name} failure.");
+                break;
+            }
         }
+
+        return allSuccessful;
     }
 
     /// <inheritdoc/>
@@ -75,8 +76,10 @@ internal sealed class CommandOperator<TTarget>(
     }
 
     /// <inheritdoc/>
-    public ICommand<TTarget>? UndoLastCommand() => _historyManager.Undo();
+    public Task<bool?> UndoLastCommandAsync(CancellationToken cancellationToken = default)
+        => _historyManager.UndoAsync(cancellationToken);
 
     /// <inheritdoc/>
-    public ICommand<TTarget>? RedoLastCommand() => _historyManager.Redo();
+    public Task<bool?> RedoLastCommandAsync(CancellationToken cancellationToken = default)
+        => _historyManager.RedoAsync(cancellationToken);
 }

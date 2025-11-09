@@ -5,19 +5,18 @@ namespace Command.Operations;
 /// <summary>
 /// Interface for queuing and executing queues of commands.
 /// </summary>
-public interface ICommandQueuer<TTarget>
-    where TTarget : notnull
+public interface ICommandQueuer
 {
     /// <summary>
     /// Queues a command for later execution.
     /// </summary>
     /// <param name="command">The command to queue.</param>
-    void QueueCommand(ICommand<TTarget> command);
+    void QueueCommand(ICommandAsync command);
 
     /// <summary>
     /// Executes all queued commands.
     /// </summary>
-    void ExecuteQueuedCommands();
+    Task<bool> ExecuteQueuedCommandsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clears all queued commands without executing them.

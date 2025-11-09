@@ -7,98 +7,105 @@ namespace Command.NUnit;
 public class HistoryManagerTests
 {
     [Test]
-    public void HistoryManager_UndoRedo_WorksCorrectlyWithSimpleCommands()
+    public async Task HistoryManager_UndoRedo_WorksCorrectlyWithSimpleCommands()
     {
         // Arrange
-        var historyManager = new HistoryManager<Document>();
+        var historyManager = new HistoryManager();
         var doc1 = new Document();
 
         var cmd1 = new InsertCommand(doc1, 0, "Hello");
-        cmd1.Execute();
+        await cmd1.ExecuteAsync();
         historyManager.AddCommand(cmd1);
 
         var cmd2 = new InsertCommand(doc1, 5, " World");
-        cmd2.Execute();
+        await cmd2.ExecuteAsync();
         historyManager.AddCommand(cmd2);
 
         // Act - Undo last command
-        historyManager.Undo();
+        await historyManager.UndoAsync();
 
         // Assert
-        Assert.That(doc1.Content, Is.EqualTo("Hello"));
+        string content = await doc1.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello"));
 
         // Act - Redo
-        historyManager.Redo();
+        await historyManager.RedoAsync();
 
         // Assert
-        Assert.That(doc1.Content, Is.EqualTo("Hello World"));
+        content = await doc1.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello World"));
     }
 
     [Test]
-    public void HistoryManager_MultipleUndos_RestoresCorrectStates()
+    public async Task HistoryManager_MultipleUndos_RestoresCorrectStates()
     {
         // Arrange
-        var historyManager = new HistoryManager<Document>();
+        var historyManager = new HistoryManager();
         var doc1 = new Document();
 
         var cmd1 = new InsertCommand(doc1, 0, "A");
-        cmd1.Execute();
+        await cmd1.ExecuteAsync();
         historyManager.AddCommand(cmd1);
 
         var cmd2 = new InsertCommand(doc1, 1, "B");
-        cmd2.Execute();
+        await cmd2.ExecuteAsync();
         historyManager.AddCommand(cmd2);
 
         var cmd3 = new InsertCommand(doc1, 2, "C");
-        cmd3.Execute();
+        await cmd3.ExecuteAsync();
         historyManager.AddCommand(cmd3);
 
         // Act & Assert
-        Assert.That(doc1.Content, Is.EqualTo("ABC"));
+        string content = await doc1.GetTextAsync();
+        Assert.That(content, Is.EqualTo("ABC"));
 
-        historyManager.Undo();
-        Assert.That(doc1.Content, Is.EqualTo("AB"));
+        await historyManager.UndoAsync();
+        content = await doc1.GetTextAsync();
+        Assert.That(content, Is.EqualTo("AB"));
 
-        historyManager.Undo();
-        Assert.That(doc1.Content, Is.EqualTo("A"));
+        await historyManager.UndoAsync();
+        content = await doc1.GetTextAsync();
+        Assert.That(content, Is.EqualTo("A"));
 
-        historyManager.Undo();
-        Assert.That(doc1.Content, Is.EqualTo(""));
+        await historyManager.UndoAsync();
+        content = await doc1.GetTextAsync();
+        Assert.That(content, Is.EqualTo(""));
     }
 
     [Test]
-    public void HistoryManager_UndoThenNewCommand_ClearsRedoStack()
+    public async Task HistoryManager_UndoThenNewCommand_ClearsRedoStack()
     {
         // Arrange
-        var historyManager = new HistoryManager<Document>();
+        var historyManager = new HistoryManager();
         var doc1 = new Document();
 
         var cmd1 = new InsertCommand(doc1, 0, "Hello");
-        cmd1.Execute();
+        await cmd1.ExecuteAsync();
         historyManager.AddCommand(cmd1);
 
         var cmd2 = new InsertCommand(doc1, 5, " World");
-        cmd2.Execute();
+        await cmd2.ExecuteAsync();
         historyManager.AddCommand(cmd2);
 
         // Undo
-        historyManager.Undo();
+        await historyManager.UndoAsync();
 
         // Act - Add new command (should clear redo stack in proper implementation)
         var cmd3 = new InsertCommand(doc1, 5, " There");
         historyManager.AddCommand(cmd3);
 
         // Assert - Redo should not work
-        historyManager.Redo();
+        await historyManager.RedoAsync();
 
-        Assert.That(doc1.Content, Is.EqualTo("Hello"), "Redo should not change document after new command added post-undo.");
+        string content = await doc1.GetTextAsync();
+        Assert.That(content, Is.EqualTo("Hello"), "Redo should not change document after new command added post-undo.");
     }
 
     [Test]
     public void HistoryManager_LogsCommandHistory()
     {
         // Arrange
-        var historyManager = new HistoryManager<Document>();
+        var historyManager = new HistoryManager();
         var doc1 = new Document();
 
         var cmd1 = new InsertCommand(doc1, 0, "Test");
@@ -116,14 +123,14 @@ public class HistoryManagerTests
     public void HistoryManager_MaintainsMaxHistorySize()
     {
         // Arrange
-        var historyManager = new HistoryManager<Document>();
+        var historyManager = new HistoryManager();
         var doc = new Document();
 
         // Act - Add 25 commands (max is 20)
         for (int i = 0; i < 25; i++)
         {
             var cmd = new InsertCommand(doc, 0, $"{i}");
-            cmd.Execute();
+            _ = cmd.ExecuteAsync(); // Fire and forget for this test
             historyManager.AddCommand(cmd);
         }
 

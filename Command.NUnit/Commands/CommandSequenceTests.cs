@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Command.Commands;
 
 namespace Command.NUnit.Commands;
@@ -6,61 +7,61 @@ namespace Command.NUnit.Commands;
 public class CommandSequenceTests
 {
     [Test]
-    public void MultipleCommands_WithUndo_ShouldRestoreCorrectStates()
+    public async Task MultipleCommands_WithUndo_ShouldRestoreCorrectStates()
     {
         // Arrange
         var doc1 = new Document();
         var cmd1 = new InsertCommand(doc1, 0, "Hello");
 
-        cmd1.Execute(); // "Hello"
+        await cmd1.ExecuteAsync(); // "Hello"
         var cmd2 = new InsertCommand(doc1, 5, " World");
 
-        cmd2.Execute(); // "Hello World"
+        await cmd2.ExecuteAsync(); // "Hello World"
         var cmd3 = new InsertCommand(doc1, 11, "!");
 
-        cmd3.Execute(); // "Hello World!"
+        await cmd3.ExecuteAsync(); // "Hello World!"
 
         // Act & Assert
-        Assert.That(doc1.Content, Is.EqualTo("Hello World!"));
+        Assert.That(await doc1.GetTextAsync(), Is.EqualTo("Hello World!"));
 
-        cmd3.Undo();
-        Assert.That(doc1.Content, Is.EqualTo("Hello World"));
+        await cmd3.UndoAsync();
+        Assert.That(await doc1.GetTextAsync(), Is.EqualTo("Hello World"));
 
-        cmd2.Undo();
-        Assert.That(doc1.Content, Is.EqualTo("Hello"));
+        await cmd2.UndoAsync();
+        Assert.That(await doc1.GetTextAsync(), Is.EqualTo("Hello"));
 
-        cmd1.Undo();
-        Assert.That(doc1.Content, Is.EqualTo(""));
+        await cmd1.UndoAsync();
+        Assert.That(await doc1.GetTextAsync(), Is.EqualTo(""));
     }
 
     [Test]
-    public void MixedCommands_ExecuteAndUndo_ShouldMaintainCorrectState()
+    public async Task MixedCommands_ExecuteAndUndo_ShouldMaintainCorrectState()
     {
         // Arrange
         var doc = new Document();
 
         var insertCmd = new InsertCommand(doc, 0, "Hello World");
-        insertCmd.Execute();
+        await insertCmd.ExecuteAsync();
 
         var replaceCmd = new ReplaceCommand(doc, 0, 5, "Hi");
-        replaceCmd.Execute();
+        await replaceCmd.ExecuteAsync();
 
         var deleteCmd = new DeleteCommand(doc, 2, 6);
-        deleteCmd.Execute();
+        await deleteCmd.ExecuteAsync();
 
         // Act & Assert
-        Assert.That(doc.Content, Is.EqualTo("Hi"));
+        Assert.That(await doc.GetTextAsync(), Is.EqualTo("Hi"));
 
         // Undo delete
-        deleteCmd.Undo();
-        Assert.That(doc.Content, Is.EqualTo("Hi World"));
+        await deleteCmd.UndoAsync();
+        Assert.That(await doc.GetTextAsync(), Is.EqualTo("Hi World"));
 
         // Undo replace
-        replaceCmd.Undo();
-        Assert.That(doc.Content, Is.EqualTo("Hello World"));
+        await replaceCmd.UndoAsync();
+        Assert.That(await doc.GetTextAsync(), Is.EqualTo("Hello World"));
 
         // Undo insert
-        insertCmd.Undo();
-        Assert.That(doc.Content, Is.EqualTo(""));
+        await insertCmd.UndoAsync();
+        Assert.That(await doc.GetTextAsync(), Is.EqualTo(""));
     }
 }

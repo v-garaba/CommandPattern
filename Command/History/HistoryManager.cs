@@ -3,52 +3,54 @@ using Command.Commands;
 
 namespace Command.History;
 
-internal sealed class HistoryManager<TTarget> : IManagesHistory<TTarget>
-    where TTarget : notnull
+internal sealed class HistoryManager : IManagesHistory
 {
     private const int MaxHistorySize = 20;
-    private readonly Stack<ICommand<TTarget>> _commandStack = new();
-    private readonly Stack<ICommand<TTarget>> _redoStack = new();
-    private ImmutableArray<(CommandStatus Status, ICommand<TTarget> Command)> _historicalLog = [];
+    private readonly Stack<ICommandAsync> _commandStack = new();
+    private readonly Stack<ICommandAsync> _redoStack = new();
+    private Dictionary<ICommandAsync, CommandStatus> _historicalLog = [];
+
+    public IReadOnlyDictionary<ICommandAsync, CommandStatus> HistoricalLog =>
+        _historicalLog.ToImmutableDictionary();
 
     /// <inheritdoc/>
-    public void AddCommand(ICommand<TTarget> command)
+    public void AddCommand(ICommandAsync command)
     {
         _commandStack.Push(command);
         _redoStack.Clear();
-        _historicalLog = _historicalLog.Add((CommandStatus.Executed, command));
+        _historicalLog[command] = CommandStatus.Executed;
 
         // Maintain history size
-        if (_historicalLog.Length > MaxHistorySize)
+        if (_historicalLog.Count > MaxHistorySize)
         {
-            _historicalLog = _historicalLog.RemoveAt(0);
+            var oldestCommand = _historicalLog.Keys.First();
+            _historicalLog.Remove(oldestCommand);
         }
     }
 
     /// <inheritdoc/>
-    public ICommand<TTarget>? Undo()
+    public async Task<bool?> UndoAsync(CancellationToken cancellationToken = default)
     {
         if (_commandStack.TryPop(out var command))
         {
-            command.Undo();
             _redoStack.Push(command);
-            _historicalLog = _historicalLog.Add((CommandStatus.Undone, command));
-            return command;
+            _historicalLog[command] = CommandStatus.Undone;
+            return await command.UndoAsync(cancellationToken);
         }
 
         return null;
     }
 
     /// <inheritdoc/>
-    public ICommand<TTarget>? Redo()
+    public async Task<bool?> RedoAsync(CancellationToken cancellationToken = default)
     {
         if (_redoStack.TryPop(out var command))
         {
-            command.Execute();
             _commandStack.Push(command);
-            _historicalLog = _historicalLog.Add((CommandStatus.Redone, command));
-            return command;
+            _historicalLog[command] = CommandStatus.Redone;
+            return await command.ExecuteAsync(cancellationToken);
         }
+
         return null;
     }
 
@@ -61,7 +63,7 @@ internal sealed class HistoryManager<TTarget> : IManagesHistory<TTarget>
 
     public override string ToString()
     {
-        if (_historicalLog.Length == 0)
+        if (_historicalLog.Count == 0)
         {
             return "No commands executed.";
         }
@@ -69,7 +71,7 @@ internal sealed class HistoryManager<TTarget> : IManagesHistory<TTarget>
         string[] logEntries =
         [
             .. _historicalLog.Select(
-                (entry, index) => $"{index + 1}. {entry.Status}: {entry.Command.Description}"
+                (entry, index) => $"{index + 1}. {entry.Key.Description}: {entry.Value}"
             ),
         ];
 
