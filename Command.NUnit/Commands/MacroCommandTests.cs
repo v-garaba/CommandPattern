@@ -10,14 +10,14 @@ public class MacroCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Test");
+        document.InsertText(0, "Test");
         var command = new MacroCommand(document, new List<Func<Document, ICommand<Document>>>());
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Test"));
+        Assert.That(document.Content, Is.EqualTo("Test"));
     }
 
     [Test]
@@ -25,7 +25,7 @@ public class MacroCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Start");
+        document.InsertText(0, "Start");
 
         // Commands that would work if chained
         var commands = new List<Func<Document, ICommand<Document>>>
@@ -38,9 +38,9 @@ public class MacroCommandTests
         var macroCommand = new MacroCommand(document, commands);
 
         // Act & Assert
-        var result = macroCommand.Execute();
+        macroCommand.Execute();
 
-        Assert.That(result.Content, Is.EqualTo("Start ABC"));
+        Assert.That(document.Content, Is.EqualTo("Start ABC"));
     }
 
     [Test]
@@ -48,7 +48,7 @@ public class MacroCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Test");
+        document.InsertText(0, "Test");
 
         var commands = new List<Func<Document, ICommand<Document>>>
         {
@@ -59,10 +59,10 @@ public class MacroCommandTests
         macroCommand.Execute();
 
         // Act
-        var result = macroCommand.Undo();
+        macroCommand.Undo();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Test"));
+        Assert.That(document.Content, Is.EqualTo("Test"));
     }
 
     [Test]

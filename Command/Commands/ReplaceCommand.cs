@@ -1,3 +1,4 @@
+using Command.Memento;
 using Command.Validation;
 
 namespace Command.Commands;
@@ -9,30 +10,27 @@ internal sealed class ReplaceCommand(
     string replaceText
 ) : ICommand<Document>
 {
-    private readonly Document _document = document;
+    private readonly Document _document = document.AssertNotNull();
+    private readonly ISnapshot _snapshot = document.CreateSnapshot();
     private readonly int _position = position.AssertPositive();
     private readonly int _length = length.AssertPositive();
     private readonly string _replaceText = replaceText.AssertNotEmpty();
-    private string _undoReplaceText = string.Empty;
 
     /// <inheritdoc/>
-    public Document Execute()
+    public void Execute()
     {
-        var doc = _document.Clone();
-        _undoReplaceText = doc.GetText(_position, _length);
-        doc = doc.ReplaceText(_position, _length, _replaceText);
-        return doc;
+        _document.ReplaceText(_position, _length, _replaceText);
     }
 
     /// <inheritdoc/>
-    public Document Undo()
+    public void Undo()
     {
-        return _document.Clone();
+        _document.RestoreSnapshot(_snapshot);
     }
 
     /// <inheritdoc/>
     public string Description =>
-        $"Replace text at position {_position} (was: '{_undoReplaceText}')";
+        $"Replace text at position {_position}";
 
     /// <inheritdoc/>
     public override string? ToString() => Description;

@@ -14,26 +14,24 @@ public class HistoryManagerTests
         var doc1 = new Document();
 
         var cmd1 = new InsertCommand(doc1, 0, "Hello");
-        var doc2 = cmd1.Execute();
+        cmd1.Execute();
         historyManager.AddCommand(cmd1);
 
-        var cmd2 = new InsertCommand(doc2, 5, " World");
-        var doc3 = cmd2.Execute();
+        var cmd2 = new InsertCommand(doc1, 5, " World");
+        cmd2.Execute();
         historyManager.AddCommand(cmd2);
 
         // Act - Undo last command
-        var undoResult = historyManager.Undo();
+        historyManager.Undo();
 
         // Assert
-        Assert.That(undoResult, Is.Not.Null);
-        Assert.That(undoResult.Value.Target.Content, Is.EqualTo("Hello"));
+        Assert.That(doc1.Content, Is.EqualTo("Hello"));
 
         // Act - Redo
-        var redoResult = historyManager.Redo();
+        historyManager.Redo();
 
         // Assert
-        Assert.That(redoResult, Is.Not.Null);
-        Assert.That(redoResult.Value.Target.Content, Is.EqualTo("Hello World"));
+        Assert.That(doc1.Content, Is.EqualTo("Hello World"));
     }
 
     [Test]
@@ -44,31 +42,28 @@ public class HistoryManagerTests
         var doc1 = new Document();
 
         var cmd1 = new InsertCommand(doc1, 0, "A");
-        var doc2 = cmd1.Execute();
+        cmd1.Execute();
         historyManager.AddCommand(cmd1);
 
-        var cmd2 = new InsertCommand(doc2, 1, "B");
-        var doc3 = cmd2.Execute();
+        var cmd2 = new InsertCommand(doc1, 1, "B");
+        cmd2.Execute();
         historyManager.AddCommand(cmd2);
 
-        var cmd3 = new InsertCommand(doc3, 2, "C");
-        var doc4 = cmd3.Execute();
+        var cmd3 = new InsertCommand(doc1, 2, "C");
+        cmd3.Execute();
         historyManager.AddCommand(cmd3);
 
         // Act & Assert
-        Assert.That(doc4.Content, Is.EqualTo("ABC"));
+        Assert.That(doc1.Content, Is.EqualTo("ABC"));
 
-        var undo1 = historyManager.Undo();
-        Assert.That(undo1, Is.Not.Null);
-        Assert.That(undo1.Value.Target.Content, Is.EqualTo("AB"));
+        historyManager.Undo();
+        Assert.That(doc1.Content, Is.EqualTo("AB"));
 
-        var undo2 = historyManager.Undo();
-        Assert.That(undo2, Is.Not.Null);
-        Assert.That(undo2.Value.Target.Content, Is.EqualTo("A"));
+        historyManager.Undo();
+        Assert.That(doc1.Content, Is.EqualTo("A"));
 
-        var undo3 = historyManager.Undo();
-        Assert.That(undo3, Is.Not.Null);
-        Assert.That(undo3.Value.Target.Content, Is.EqualTo(""));
+        historyManager.Undo();
+        Assert.That(doc1.Content, Is.EqualTo(""));
     }
 
     [Test]
@@ -79,31 +74,24 @@ public class HistoryManagerTests
         var doc1 = new Document();
 
         var cmd1 = new InsertCommand(doc1, 0, "Hello");
-        var doc2 = cmd1.Execute();
+        cmd1.Execute();
         historyManager.AddCommand(cmd1);
 
-        var cmd2 = new InsertCommand(doc2, 5, " World");
-        var doc3 = cmd2.Execute();
+        var cmd2 = new InsertCommand(doc1, 5, " World");
+        cmd2.Execute();
         historyManager.AddCommand(cmd2);
 
         // Undo
         historyManager.Undo();
 
         // Act - Add new command (should clear redo stack in proper implementation)
-        var cmd3 = new InsertCommand(doc2, 5, " There");
+        var cmd3 = new InsertCommand(doc1, 5, " There");
         historyManager.AddCommand(cmd3);
 
         // Assert - Redo should not work
-        var redoResult = historyManager.Redo();
+        historyManager.Redo();
 
-        // Note: Current implementation doesn't clear redo stack!
-        // This is another bug - when you add a new command after undo,
-        // the redo stack should be cleared
-        Assert.That(
-            redoResult,
-            Is.Not.Null,
-            "Bug: HistoryManager should clear redo stack when new command is added after undo"
-        );
+        Assert.That(doc1.Content, Is.EqualTo("Hello"), "Redo should not change document after new command added post-undo.");
     }
 
     [Test]
@@ -135,7 +123,7 @@ public class HistoryManagerTests
         for (int i = 0; i < 25; i++)
         {
             var cmd = new InsertCommand(doc, 0, $"{i}");
-            doc = cmd.Execute();
+            cmd.Execute();
             historyManager.AddCommand(cmd);
         }
 
@@ -143,6 +131,6 @@ public class HistoryManagerTests
         var lines = history.Split(Environment.NewLine);
 
         // Assert - Should only have 20 entries
-        Assert.That(lines.Length, Is.LessThanOrEqualTo(20));
+        Assert.That(lines, Has.Length.LessThanOrEqualTo(20));
     }
 }

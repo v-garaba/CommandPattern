@@ -15,6 +15,7 @@ internal sealed class HistoryManager<TTarget> : IManagesHistory<TTarget>
     public void AddCommand(ICommand<TTarget> command)
     {
         _commandStack.Push(command);
+        _redoStack.Clear();
         _historicalLog = _historicalLog.Add((CommandStatus.Executed, command));
 
         // Maintain history size
@@ -25,28 +26,28 @@ internal sealed class HistoryManager<TTarget> : IManagesHistory<TTarget>
     }
 
     /// <inheritdoc/>
-    public (TTarget Target, ICommand<TTarget> Command)? Undo()
+    public ICommand<TTarget>? Undo()
     {
         if (_commandStack.TryPop(out var command))
         {
-            var target = command.Undo();
+            command.Undo();
             _redoStack.Push(command);
             _historicalLog = _historicalLog.Add((CommandStatus.Undone, command));
-            return (target, command);
+            return command;
         }
 
         return null;
     }
 
     /// <inheritdoc/>
-    public (TTarget Target, ICommand<TTarget> Command)? Redo()
+    public ICommand<TTarget>? Redo()
     {
         if (_redoStack.TryPop(out var command))
         {
-            var target = command.Execute();
+            command.Execute();
             _commandStack.Push(command);
             _historicalLog = _historicalLog.Add((CommandStatus.Redone, command));
-            return (target, command);
+            return command;
         }
         return null;
     }

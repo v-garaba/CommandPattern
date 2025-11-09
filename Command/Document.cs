@@ -1,4 +1,5 @@
 using System.Text;
+using Command.Memento;
 
 namespace Command;
 
@@ -9,17 +10,15 @@ public sealed class Document()
     public string Content => _text.ToString(); // Document State
     public int Length => _text.Length;
 
-    public Document InsertText(int position, string text)
+    public void InsertText(int position, string text)
     {
         if (position < 0 || position > _text.Length)
             throw new ArgumentOutOfRangeException(nameof(position));
 
-        var doc = Clone();
-        doc._text.Insert(position, text);
-        return doc;
+        _text.Insert(position, text);
     }
 
-    public Document DeleteText(int position, int length)
+    public void DeleteText(int position, int length)
     {
         if (position < 0 || position >= _text.Length || length <= 0)
             throw new ArgumentOutOfRangeException();
@@ -27,17 +26,13 @@ public sealed class Document()
         if (position + length > _text.Length)
             length = _text.Length - position;
 
-        var doc = Clone();
-        doc._text.Remove(position, length);
-        return doc;
+        _text.Remove(position, length);
     }
 
-    public Document ReplaceText(int position, int length, string newText)
+    public void ReplaceText(int position, int length, string newText)
     {
-        var doc = Clone();
-        doc = doc.DeleteText(position, length);
-        doc = doc.InsertText(position, newText);
-        return doc;
+        DeleteText(position, length);
+        InsertText(position, newText);
     }
 
     public string GetText(int position, int length)
@@ -51,19 +46,29 @@ public sealed class Document()
         return _text.ToString(position, length);
     }
 
-    public Document Clear()
+    public void Clear()
     {
-        var document = Clone();
-        document._text.Clear();
-        return document;
+        _text.Clear();
     }
 
     public override string ToString() => _text.ToString();
 
-    public Document Clone()
+    public ISnapshot CreateSnapshot()
     {
-        var clone = new Document();
-        clone._text.Append(_text.ToString());
-        return clone;
+        return new DocumentState(Content);
+    }
+
+    public void RestoreSnapshot(ISnapshot snapshot)
+    {
+        if (snapshot is not DocumentState docSnapshot)
+            throw new ArgumentException("Invalid snapshot type", nameof(snapshot));
+
+        _text.Clear();
+        _text.Append(docSnapshot.Content);
+    }
+
+    private sealed class DocumentState(string content) : ISnapshot
+    {
+        public string Content { get; } = content;
     }
 }

@@ -12,19 +12,19 @@ public interface ICommandExecuter<TTarget>
     /// Executes a command and adds it to the history.
     /// </summary>
     /// <param name="command">The command to execute.</param>
-    TTarget ExecuteCommand(ICommand<TTarget> command);
+    void ExecuteCommand(ICommand<TTarget> command);
 
     /// <summary>
     /// Undoes the last executed command.
     /// </summary>
     /// <returns>The command that was undone, or null if there is no command to undo.</returns>
-    (TTarget Target, ICommand<TTarget> Command)? UndoLastCommand();
+    ICommand<TTarget>? UndoLastCommand();
 
     /// <summary>
     /// Redoes the last undone command.
     /// </summary>
     /// <returns>The command that was redone, or null if there is no command to redo.</returns>
-    (TTarget Target, ICommand<TTarget> Command)? RedoLastCommand();
+    ICommand<TTarget>? RedoLastCommand();
 
     /// <summary>
     /// Returns a string representation of the command history.

@@ -10,15 +10,14 @@ public class DeleteCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello World");
+        document.InsertText(0, "Hello World");
         var command = new DeleteCommand(document, 5, 6);
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hello"));
-        Assert.That(result.Length, Is.EqualTo(5));
+        Assert.That(document.Content, Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -26,14 +25,14 @@ public class DeleteCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello World");
+        document.InsertText(0, "Hello World");
         var command = new DeleteCommand(document, 0, 6);
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("World"));
+        Assert.That(document.Content, Is.EqualTo("World"));
     }
 
     [Test]
@@ -41,14 +40,14 @@ public class DeleteCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello World");
+        document.InsertText(0, "Hello World");
         var command = new DeleteCommand(document, 5, 6);
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hello"));
+        Assert.That(document.Content, Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -56,15 +55,15 @@ public class DeleteCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello World");
+        document.InsertText(0, "Hello World");
         var command = new DeleteCommand(document, 5, 6);
         command.Execute();
 
         // Act
-        var undoResult = command.Undo();
+        command.Undo();
 
         // Assert
-        Assert.That(undoResult.Content, Is.EqualTo("Hello World"));
+        Assert.That(document.Content, Is.EqualTo("Hello World"));
     }
 
     [Test]
@@ -72,7 +71,7 @@ public class DeleteCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello World");
+        document.InsertText(0, "Hello World");
         var command = new DeleteCommand(document, 0, 5);
 
         // Act
@@ -81,6 +80,5 @@ public class DeleteCommandTests
 
         // Assert
         Assert.That(description, Does.Contain("Delete"));
-        Assert.That(description, Does.Contain("Hello"));
     }
 }

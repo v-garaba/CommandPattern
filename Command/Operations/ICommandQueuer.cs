@@ -17,7 +17,7 @@ public interface ICommandQueuer<TTarget>
     /// <summary>
     /// Executes all queued commands.
     /// </summary>
-    TTarget? ExecuteQueuedCommands();
+    void ExecuteQueuedCommands();
 
     /// <summary>
     /// Clears all queued commands without executing them.

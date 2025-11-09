@@ -10,14 +10,14 @@ public class CureTextCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello:World");
+        document.InsertText(0, "Hello:World");
         var command = new CureTextCommand(document);
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hello@World"));
+        Assert.That(document.Content, Is.EqualTo("Hello@World"));
     }
 
     [Test]
@@ -25,14 +25,14 @@ public class CureTextCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello World");
+        document.InsertText(0, "Hello World");
         var command = new CureTextCommand(document);
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hello_World"));
+        Assert.That(document.Content, Is.EqualTo("Hello_World"));
     }
 
     [Test]
@@ -40,14 +40,14 @@ public class CureTextCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello: World Test");
+        document.InsertText(0, "Hello: World Test");
         var command = new CureTextCommand(document);
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hello@_World_Test"));
+        Assert.That(document.Content, Is.EqualTo("Hello@_World_Test"));
     }
 
     [Test]
@@ -55,18 +55,14 @@ public class CureTextCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "a:b:c");
+        document.InsertText(0, "a:b:c");
         var command = new CureTextCommand(document);
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        // This test documents potential index shifting behavior
-        // Expected: "a@b@c"
-        // Note: Current implementation works for this case but algorithm
-        // could fail if replacement text length differs from original
-        Assert.That(result.Content, Is.EqualTo("a@b@c"));
+        Assert.That(document.Content, Is.EqualTo("a@b@c"));
     }
 
     [Test]
@@ -74,14 +70,14 @@ public class CureTextCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "HelloWorld");
+        document.InsertText(0, "HelloWorld");
         var command = new CureTextCommand(document);
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("HelloWorld"));
+        Assert.That(document.Content, Is.EqualTo("HelloWorld"));
     }
 
     [Test]
@@ -89,15 +85,15 @@ public class CureTextCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello: World");
+        document.InsertText(0, "Hello: World");
         var command = new CureTextCommand(document);
         command.Execute();
 
         // Act
-        var undoResult = command.Undo();
+        command.Undo();
 
         // Assert
-        Assert.That(undoResult.Content, Is.EqualTo("Hello: World"));
+        Assert.That(document.Content, Is.EqualTo("Hello: World"));
     }
 
     [Test]

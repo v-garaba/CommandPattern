@@ -22,19 +22,17 @@ internal sealed class CommandOperator<TTarget>(
     private readonly ILogger<CommandOperator<TTarget>> _logger = logger.AssertNotNull();
 
     /// <inheritdoc/>
-    public TTarget ExecuteCommand(ICommand<TTarget> command)
+    public void ExecuteCommand(ICommand<TTarget> command)
     {
         try
         {
-            TTarget result = command.Execute();
+            command.Execute();
             _historyManager.AddCommand(command.AssertNotNull());
-            return result;
         }
         catch (Exception ex)
         {
             // Tell user that command execution failed but do not throw. Outside of the scope.
             _logger.LogError(ex, "Failed to execute command: {Command}", command);
-            return default!;
         }
     }
 
@@ -45,15 +43,13 @@ internal sealed class CommandOperator<TTarget>(
     }
 
     /// <inheritdoc/>
-    public TTarget? ExecuteQueuedCommands()
+    public void ExecuteQueuedCommands()
     {
         ICommand<TTarget>? command;
-        TTarget? lastResult = default;
         while ((command = _commandQueue.Dequeue()) != null)
         {
-            lastResult = ExecuteCommand(command);
+            ExecuteCommand(command);
         }
-        return lastResult;
     }
 
     /// <inheritdoc/>
@@ -79,8 +75,8 @@ internal sealed class CommandOperator<TTarget>(
     }
 
     /// <inheritdoc/>
-    public (TTarget Target, ICommand<TTarget> Command)? UndoLastCommand() => _historyManager.Undo();
+    public ICommand<TTarget>? UndoLastCommand() => _historyManager.Undo();
 
     /// <inheritdoc/>
-    public (TTarget Target, ICommand<TTarget> Command)? RedoLastCommand() => _historyManager.Redo();
+    public ICommand<TTarget>? RedoLastCommand() => _historyManager.Redo();
 }

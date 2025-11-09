@@ -13,11 +13,10 @@ public class InsertCommandTests
         var command = new InsertCommand(document, 0, "Hello");
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hello"));
-        Assert.That(result.Length, Is.EqualTo(5));
+        Assert.That(document.Content, Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -25,14 +24,14 @@ public class InsertCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "HelloWorld");
+        document.InsertText(0, "HelloWorld");
         var command = new InsertCommand(document, 5, " - ");
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hello - World"));
+        Assert.That(document.Content, Is.EqualTo("Hello - World"));
     }
 
     [Test]
@@ -44,11 +43,10 @@ public class InsertCommandTests
         command.Execute();
 
         // Act
-        var undoResult = command.Undo();
+        command.Undo();
 
         // Assert
-        Assert.That(undoResult.Content, Is.EqualTo(""));
-        Assert.That(undoResult.Length, Is.EqualTo(0));
+        Assert.That(document.Content, Is.EqualTo(""));
     }
 
     [Test]
@@ -56,15 +54,15 @@ public class InsertCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "First");
+        document.InsertText(0, "First");
         var command = new InsertCommand(document, 5, " Second");
         command.Execute();
 
         // Act
-        var undoResult = command.Undo();
+        command.Undo();
 
         // Assert
-        Assert.That(undoResult.Content, Is.EqualTo("First"));
+        Assert.That(document.Content, Is.EqualTo("First"));
     }
 
     [Test]

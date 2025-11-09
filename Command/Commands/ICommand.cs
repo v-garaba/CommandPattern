@@ -15,10 +15,10 @@ public interface ICommand<TTarget>
     /// <summary>
     /// Executes the command, performing the operation on the target.
     /// </summary>
-    TTarget Execute();
+    void Execute();
 
     /// <summary>
     /// Undoes the command, reverting the operation performed by Execute.
     /// </summary>
-    TTarget Undo();
+    void Undo();
 }

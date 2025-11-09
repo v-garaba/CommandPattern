@@ -6,7 +6,7 @@ public interface IManagesHistory<TTarget>
     where TTarget : notnull
 {
     void AddCommand(ICommand<TTarget> command);
-    (TTarget Target, ICommand<TTarget> Command)? Undo();
-    (TTarget Target, ICommand<TTarget> Command)? Redo();
+    ICommand<TTarget>? Undo();
+    ICommand<TTarget>? Redo();
     void Clear();
 }

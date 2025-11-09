@@ -1,3 +1,6 @@
+using Command.Memento;
+using Command.Validation;
+
 namespace Command.Commands;
 
 internal sealed class MacroCommand(
@@ -5,31 +8,28 @@ internal sealed class MacroCommand(
     IEnumerable<Func<Document, ICommand<Document>>> commandFactories
 ) : ICommand<Document>
 {
-    private readonly Document _document = document;
+    private readonly Document _document = document.AssertNotNull();
+    private readonly ISnapshot _snapshot = document.CreateSnapshot();
     private readonly IEnumerable<Func<Document, ICommand<Document>>> _commandFactories =
         commandFactories;
     private readonly List<ICommand<Document>> _executedCommands = new();
 
     /// <inheritdoc/>
-    public Document Execute()
+    public void Execute()
     {
         _executedCommands.Clear();
-        var currentDoc = _document;
-
         foreach (var factory in _commandFactories)
         {
-            var command = factory(currentDoc);
-            currentDoc = command.Execute();
+            var command = factory(_document);
+            command.Execute();
             _executedCommands.Add(command);
         }
-
-        return currentDoc;
     }
 
     /// <inheritdoc/>
-    public Document Undo()
+    public void Undo()
     {
-        return _document.Clone();
+        _document.RestoreSnapshot(_snapshot);
     }
 
     /// <inheritdoc/>

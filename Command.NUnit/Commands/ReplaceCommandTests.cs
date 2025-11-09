@@ -10,14 +10,14 @@ public class ReplaceCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello World");
+        document.InsertText(0, "Hello World");
         var command = new ReplaceCommand(document, 0, 5, "Hi");
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hi World"));
+        Assert.That(document.Content, Is.EqualTo("Hi World"));
     }
 
     [Test]
@@ -25,14 +25,14 @@ public class ReplaceCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hi");
+        document.InsertText(0, "Hi");
         var command = new ReplaceCommand(document, 0, 2, "Hello");
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hello"));
+        Assert.That(document.Content, Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -40,14 +40,14 @@ public class ReplaceCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello Big World");
+        document.InsertText(0, "Hello Big World");
         var command = new ReplaceCommand(document, 6, 3, "Small");
 
         // Act
-        var result = command.Execute();
+        command.Execute();
 
         // Assert
-        Assert.That(result.Content, Is.EqualTo("Hello Small World"));
+        Assert.That(document.Content, Is.EqualTo("Hello Small World"));
     }
 
     [Test]
@@ -55,15 +55,15 @@ public class ReplaceCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello World");
+        document.InsertText(0, "Hello World");
         var command = new ReplaceCommand(document, 0, 5, "Hi");
         command.Execute();
 
         // Act
-        var undoResult = command.Undo();
+        command.Undo();
 
         // Assert
-        Assert.That(undoResult.Content, Is.EqualTo("Hello World"));
+        Assert.That(document.Content, Is.EqualTo("Hello World"));
     }
 
     [Test]
@@ -71,7 +71,7 @@ public class ReplaceCommandTests
     {
         // Arrange
         var document = new Document();
-        document = document.InsertText(0, "Hello World");
+        document.InsertText(0, "Hello World");
         var command = new ReplaceCommand(document, 0, 5, "Hi");
 
         // Act
@@ -80,6 +80,5 @@ public class ReplaceCommandTests
 
         // Assert
         Assert.That(description, Does.Contain("Replace"));
-        Assert.That(description, Does.Contain("Hello"));
     }
 }

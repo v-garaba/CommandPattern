@@ -10,12 +10,10 @@ public class DocumentTests
         var doc = new Document();
 
         // Act
-        var newDoc = doc.InsertText(0, "Test");
+        doc.InsertText(0, "Test");
 
         // Assert
-        Assert.That(doc, Is.Not.SameAs(newDoc));
-        Assert.That(doc.Content, Is.EqualTo(""));
-        Assert.That(newDoc.Content, Is.EqualTo("Test"));
+        Assert.That(doc.Content, Is.EqualTo("Test"));
     }
 
     [Test]
@@ -23,15 +21,13 @@ public class DocumentTests
     {
         // Arrange
         var doc = new Document();
-        doc = doc.InsertText(0, "Hello World");
+        doc.InsertText(0, "Hello World");
 
         // Act
-        var newDoc = doc.DeleteText(5, 6);
+        doc.DeleteText(5, 6);
 
         // Assert
-        Assert.That(doc, Is.Not.SameAs(newDoc));
-        Assert.That(doc.Content, Is.EqualTo("Hello World"));
-        Assert.That(newDoc.Content, Is.EqualTo("Hello"));
+        Assert.That(doc.Content, Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -39,30 +35,48 @@ public class DocumentTests
     {
         // Arrange
         var doc = new Document();
-        doc = doc.InsertText(0, "Hello World");
+        doc.InsertText(0, "Hello World");
 
         // Act
-        var newDoc = doc.ReplaceText(0, 5, "Hi");
+        doc.ReplaceText(0, 5, "Hi");
 
         // Assert
-        Assert.That(doc, Is.Not.SameAs(newDoc));
-        Assert.That(doc.Content, Is.EqualTo("Hello World"));
-        Assert.That(newDoc.Content, Is.EqualTo("Hi World"));
+        Assert.That(doc.Content, Is.EqualTo("Hi World"));
     }
 
     [Test]
-    public void Document_Clone_CreatesDeepCopy()
+    public void Document_Clear_EmptiesContent()
     {
         // Arrange
         var doc = new Document();
-        doc = doc.InsertText(0, "Original");
+        doc.InsertText(0, "Hello World");
 
         // Act
-        var clone = doc.Clone();
+        doc.Clear();
 
         // Assert
-        Assert.That(doc, Is.Not.SameAs(clone));
-        Assert.That(clone.Content, Is.EqualTo("Original"));
+        Assert.That(doc.Content, Is.EqualTo(string.Empty));
+    }
+
+    [Test]
+    public void Document_CreateSnapshot_CreatesDeepCopy()
+    {
+        // Arrange
+        var doc = new Document();
+        doc.InsertText(0, "Original");
+
+        // Act & Assert: Create snapshot then clear original
+        var snapshot = doc.CreateSnapshot();
+
+        doc.Clear();
+
+        Assert.That(doc.Content, Is.EqualTo(string.Empty));
+
+        // Act: Restore from snapshot
+        doc.RestoreSnapshot(snapshot);
+
+        // Assert
+        Assert.That(doc.Content, Is.EqualTo("Original"));
     }
 
     [Test]
@@ -70,7 +84,7 @@ public class DocumentTests
     {
         // Arrange
         var doc = new Document();
-        doc = doc.InsertText(0, "Hello World");
+        doc.InsertText(0, "Hello World");
 
         // Act
         var text = doc.GetText(0, 5);
@@ -84,7 +98,7 @@ public class DocumentTests
     {
         // Arrange
         var doc = new Document();
-        doc = doc.InsertText(0, "Hello");
+        doc.InsertText(0, "Hello");
 
         // Act
         var text = doc.GetText(10, 5);
@@ -109,28 +123,13 @@ public class DocumentTests
     {
         // Arrange
         var doc = new Document();
-        doc = doc.InsertText(0, "Hello");
+        doc.InsertText(0, "Hello");
 
         // Act
-        var newDoc = doc.DeleteText(2, 100);
+        doc.DeleteText(2, 100);
 
         // Assert
-        Assert.That(newDoc.Content, Is.EqualTo("He"));
-    }
-
-    [Test]
-    public void Document_Clear_EmptiesContent()
-    {
-        // Arrange
-        var doc = new Document();
-        doc = doc.InsertText(0, "Hello World");
-
-        // Act
-        doc.Clear();
-
-        // Assert
-        Assert.That(doc.Content, Is.EqualTo(string.Empty));
-        Assert.That(doc.Length, Is.EqualTo(0));
+        Assert.That(doc.Content, Is.EqualTo("He"));
     }
 
     [Test]
@@ -140,10 +139,10 @@ public class DocumentTests
         var doc = new Document();
         Assert.That(doc.Length, Is.EqualTo(0));
 
-        doc = doc.InsertText(0, "Hello");
+        doc.InsertText(0, "Hello");
         Assert.That(doc.Length, Is.EqualTo(5));
 
-        doc = doc.InsertText(5, " World");
+        doc.InsertText(5, " World");
         Assert.That(doc.Length, Is.EqualTo(11));
     }
 }

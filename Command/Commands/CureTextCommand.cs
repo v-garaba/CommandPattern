@@ -1,16 +1,19 @@
+using Command.Memento;
+using Command.Validation;
+
 namespace Command.Commands;
 
 internal sealed class CureTextCommand(Document document) : ICommand<Document>
 {
-    private readonly Document _document = document;
+    private readonly Document _document = document.AssertNotNull();
+    private readonly ISnapshot _snapshot = document.CreateSnapshot();
 
     /// <inheritdoc/>
-    public Document Execute()
+    public void Execute()
     {
-        var doc = _document.Clone();
         int[] foundColumns =
         [
-            .. doc
+            .. _document
                 .Content.Select((c, i) => (Char: c, Index: i))
                 .Where(t => t.Char == ':')
                 .Select(t => t.Index),
@@ -20,13 +23,13 @@ internal sealed class CureTextCommand(Document document) : ICommand<Document>
         {
             foreach (var columnIndex in foundColumns)
             {
-                doc = doc.ReplaceText(columnIndex, 1, "@");
+                _document.ReplaceText(columnIndex, 1, "@");
             }
         }
 
         int[] foundSpaces =
         [
-            .. doc
+            .. _document
                 .Content.Select((c, i) => (Char: c, Index: i))
                 .Where(t => t.Char == ' ')
                 .Select(t => t.Index),
@@ -36,17 +39,15 @@ internal sealed class CureTextCommand(Document document) : ICommand<Document>
         {
             foreach (var spaceIndex in foundSpaces)
             {
-                doc = doc.ReplaceText(spaceIndex, 1, "_");
+                _document.ReplaceText(spaceIndex, 1, "_");
             }
         }
-
-        return doc;
     }
 
     /// <inheritdoc/>
-    public Document Undo()
+    public void Undo()
     {
-        return _document.Clone();
+        _document.RestoreSnapshot(_snapshot);
     }
 
     /// <inheritdoc/>

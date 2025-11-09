@@ -1,3 +1,4 @@
+using Command.Memento;
 using Command.Validation;
 
 namespace Command.Commands;
@@ -5,29 +6,26 @@ namespace Command.Commands;
 internal sealed class DeleteCommand(Document document, int position, int length)
     : ICommand<Document>
 {
-    private readonly Document _document = document;
+    private readonly Document _document = document.AssertNotNull();
+    private readonly ISnapshot _snapshot = document.CreateSnapshot();
     private readonly int _position = position.AssertPositive();
     private readonly int _length = length.AssertPositive();
-    private string _undoDeletedText = string.Empty;
 
     /// <inheritdoc/>
-    public Document Execute()
+    public void Execute()
     {
-        var doc = _document.Clone();
-        _undoDeletedText = doc.GetText(_position, _length);
-        doc = doc.DeleteText(_position, _length);
-        return doc;
+        _document.DeleteText(_position, _length);
     }
 
     /// <inheritdoc/>
-    public Document Undo()
+    public void Undo()
     {
-        return _document.Clone();
+        _document.RestoreSnapshot(_snapshot);
     }
 
     /// <inheritdoc/>
     public string Description =>
-        $"Delete {_length} characters at position {_position} (was: '{_undoDeletedText}')";
+        $"Delete {_length} characters at position {_position}";
 
     /// <inheritdoc/>
     public override string? ToString() => Description;
