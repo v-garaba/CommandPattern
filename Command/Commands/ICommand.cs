@@ -1,3 +1,5 @@
+using Command.Common;
+
 namespace Command.Commands;
 
 /// <summary>
@@ -14,10 +16,10 @@ public interface ICommandAsync
     /// <summary>
     /// Executes the command, performing the operation on the target.
     /// </summary>
-    Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
+    Task<Result> ExecuteAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Undoes the command, reverting the operation performed by Execute.
     /// </summary>
-    Task<bool> UndoAsync(CancellationToken cancellationToken = default);
+    Task<Result> UndoAsync(CancellationToken cancellationToken = default);
 }

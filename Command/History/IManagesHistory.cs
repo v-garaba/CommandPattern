@@ -1,4 +1,5 @@
 using Command.Commands;
+using Command.Common;
 
 namespace Command.History;
 
@@ -8,9 +9,9 @@ public interface IManagesHistory
 
     void AddCommand(ICommandAsync command);
 
-    Task<bool?> UndoAsync(CancellationToken cancellationToken = default);
+    Task<Result<ICommandAsync?>> UndoAsync(CancellationToken cancellationToken = default);
 
-    Task<bool?> RedoAsync(CancellationToken cancellationToken = default);
+    Task<Result<ICommandAsync?>> RedoAsync(CancellationToken cancellationToken = default);
 
     void Clear();
 }

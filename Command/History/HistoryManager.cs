@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Command.Commands;
+using Command.Common;
 
 namespace Command.History;
 
@@ -29,29 +30,31 @@ internal sealed class HistoryManager : IManagesHistory
     }
 
     /// <inheritdoc/>
-    public async Task<bool?> UndoAsync(CancellationToken cancellationToken = default)
+    public async Task<Result<ICommandAsync?>> UndoAsync(CancellationToken cancellationToken = default)
     {
         if (_commandStack.TryPop(out var command))
         {
             _redoStack.Push(command);
             _historicalLog[command] = CommandStatus.Undone;
-            return await command.UndoAsync(cancellationToken);
+            await command.UndoAsync(cancellationToken);
+            return Result<ICommandAsync?>.Success(command);
         }
 
-        return null;
+        return Result<ICommandAsync?>.Success(null);
     }
 
     /// <inheritdoc/>
-    public async Task<bool?> RedoAsync(CancellationToken cancellationToken = default)
+    public async Task<Result<ICommandAsync?>> RedoAsync(CancellationToken cancellationToken = default)
     {
         if (_redoStack.TryPop(out var command))
         {
             _commandStack.Push(command);
             _historicalLog[command] = CommandStatus.Redone;
-            return await command.ExecuteAsync(cancellationToken);
+            await command.ExecuteAsync(cancellationToken);
+            return Result<ICommandAsync?>.Success(command);
         }
 
-        return null;
+        return Result<ICommandAsync?>.Success(null);
     }
 
     /// <inheritdoc/>

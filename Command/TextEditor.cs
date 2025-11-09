@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Command.Commands;
+using Command.Common;
 using Command.Operations;
 using Command.Validation;
 
@@ -13,42 +14,42 @@ public class TextEditor(ICommandOperator commandOperator)
     public async Task InsertTextAsync(int position, string text, CancellationToken cancellationToken)
     {
         var insertCommand = new InsertCommand(_document, position, text);
-        bool success = await _commandOperator.ExecuteCommandAsync(insertCommand, cancellationToken);
-        if (success)
+        Result result = await _commandOperator.ExecuteCommandAsync(insertCommand, cancellationToken);
+        if (result.IsSuccess)
         {
             Console.WriteLine($"✓ Inserted '{text}' at position {position}");
         }
         else
         {
-            Console.WriteLine($"✗ Failed to insert '{text}' at position {position}");
+            Console.WriteLine($"✗ Failed to insert: {result.ErrorMessage}");
         }
     }
 
     public async Task DeleteTextAsync(int position, int length, CancellationToken cancellationToken)
     {
         var deleteCommand = new DeleteCommand(_document, position, length);
-        bool success = await _commandOperator.ExecuteCommandAsync(deleteCommand, cancellationToken);
-        if (success)
+        Result result = await _commandOperator.ExecuteCommandAsync(deleteCommand, cancellationToken);
+        if (result.IsSuccess)
         {
             Console.WriteLine($"✓ Deleted {length} characters at position {position}");
         }
         else
         {
-            Console.WriteLine($"✗ Failed to delete {length} characters at position {position}");
+            Console.WriteLine($"✗ Failed to delete: {result.ErrorMessage}");
         }
     }
 
     public async Task ReplaceTextAsync(int position, int length, string newText, CancellationToken cancellationToken)
     {
         var replaceCommand = new ReplaceCommand(_document, position, length, newText);
-        bool success = await _commandOperator.ExecuteCommandAsync(replaceCommand, cancellationToken);
-        if (success)
+        Result result = await _commandOperator.ExecuteCommandAsync(replaceCommand, cancellationToken);
+        if (result.IsSuccess)
         {
             Console.WriteLine($"✓ Replaced {length} characters at position {position} with '{newText}'");
         }
         else
         {
-            Console.WriteLine($"✗ Failed to replace {length} characters at position {position} with '{newText}'");
+            Console.WriteLine($"✗ Failed to replace: {result.ErrorMessage}");
         }
     }
 
@@ -61,42 +62,40 @@ public class TextEditor(ICommandOperator commandOperator)
 
     public async Task AttemptUndoAsync(CancellationToken cancellationToken)
     {
-        var reversedOperation = await _commandOperator.UndoLastCommandAsync(cancellationToken);
+        Result<ICommandAsync?> reversedOperation = await _commandOperator.UndoLastCommandAsync(cancellationToken);
 
-        if (reversedOperation == null)
+        if (!reversedOperation.IsSuccess)
+        {
+            Console.WriteLine("✗ Undo operation failed");
+            return;
+        }
+
+        if (reversedOperation.Value == null)
         {
             Console.WriteLine("✗ No operation to undo");
             return;
         }
 
-        if (reversedOperation == true)
-        {
-            Console.WriteLine($"✓ Undid operation: {reversedOperation}");
-        }
-        else
-        {
-            Console.WriteLine("✗ Undo operation failed");
-        }
+        Console.WriteLine($"✓ Undid operation: {reversedOperation}");
     }
 
     public async Task AttemptRedoAsync(CancellationToken cancellationToken)
     {
-        var redoneOperation = await _commandOperator.RedoLastCommandAsync(cancellationToken);
+        Result<ICommandAsync?> redoneOperation = await _commandOperator.RedoLastCommandAsync(cancellationToken);
 
-        if (redoneOperation == null)
+        if (!redoneOperation.IsSuccess)
+        {
+            Console.WriteLine("✗ Redo operation failed");
+            return;
+        }
+
+        if (redoneOperation.Value == null)
         {
             Console.WriteLine("✗ No operation to redo");
             return;
         }
 
-        if (redoneOperation == true)
-        {
-            Console.WriteLine($"✓ Redid operation: {redoneOperation}");
-        }
-        else
-        {
-            Console.WriteLine("✗ Redo operation failed");
-        }
+        Console.WriteLine($"✓ Redid operation: {redoneOperation}");
     }
 
     public async Task AttemptMacroAsync(CancellationToken cancellationToken)
@@ -133,19 +132,19 @@ public class TextEditor(ICommandOperator commandOperator)
 
     public async Task ApplyChangesAsync(CancellationToken cancellationToken)
     {
-        bool success = await _commandOperator.ExecuteQueuedCommandsAsync(cancellationToken);
+        Result success = await _commandOperator.ExecuteQueuedCommandsAsync(cancellationToken);
 
-        if (success)
+        if (success.IsSuccess)
         {
             Console.WriteLine("✓ Executed all queued operations");
         }
         else
         {
-            Console.WriteLine("✗ Failed to execute some queued operations");
+            Console.WriteLine($"✗ Failed to execute queued operations: {success.ErrorMessage}");
         }
     }
 
-    public async Task<int> DocumentLengthAsync(CancellationToken cancellationToken = default)
+    public async Task<Result<int>> DocumentLengthAsync(CancellationToken cancellationToken = default)
     {
         return await _document.GetLengthAsync(cancellationToken);
     }
@@ -161,16 +160,16 @@ public class TextEditor(ICommandOperator commandOperator)
     public async Task ShowCurrentStateAsync(CancellationToken cancellationToken = default)
     {
         Console.WriteLine($"\n--- CURRENT DOCUMENT STATE ---");
-        string text = await _document.GetTextAsync(cancellationToken);
-        int length = await _document.GetLengthAsync(cancellationToken);
-        Console.WriteLine($"Length: {length} characters");
-        if (string.IsNullOrEmpty(text))
+        Result<string> textResult = await _document.GetTextAsync(cancellationToken);
+        Result<int> lengthResult = await _document.GetLengthAsync(cancellationToken);
+        Console.WriteLine($"Length: {lengthResult.Value} characters");
+        if (string.IsNullOrEmpty(textResult.Value))
         {
             Console.WriteLine("Content: [Empty]");
         }
         else
         {
-            Console.WriteLine($"Content: \"{text}\"");
+            Console.WriteLine($"Content: \"{textResult.Value}\"");
         }
         Console.WriteLine("-----------------------------\n");
     }

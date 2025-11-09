@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Command.Common;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Command;
@@ -50,9 +51,9 @@ public class Program
 
         await editor.InsertTextAsync(0, "Roaring", cancellationToken);
 
-        int length = await editor.DocumentLengthAsync(cancellationToken);
-        await editor.InsertTextAsync(length, " tiger", cancellationToken);
-        await editor.InsertTextAsync(length, ": ", cancellationToken);
+        Result<int> length = await editor.DocumentLengthAsync(cancellationToken);
+        await editor.InsertTextAsync(length.Value, " tiger", cancellationToken);
+        await editor.InsertTextAsync(length.Value, ": ", cancellationToken);
         await editor.ShowCurrentStateAsync(cancellationToken);
 
         await editor.ReplaceTextAsync(0, 5, "Hi", cancellationToken);

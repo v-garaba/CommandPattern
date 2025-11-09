@@ -1,4 +1,5 @@
 using Command.Commands;
+using Command.Common;
 using Command.History;
 using Command.Queues;
 using Command.Validation;
@@ -21,11 +22,10 @@ internal sealed class CommandOperator(
     private readonly ILogger<CommandOperator> _logger = logger.AssertNotNull();
 
     /// <inheritdoc/>
-    public Task<bool> ExecuteCommandAsync(ICommandAsync command, CancellationToken cancellationToken = default)
+    public Task<Result> ExecuteCommandAsync(ICommandAsync command, CancellationToken cancellationToken = default)
     {
-        var result = command.ExecuteAsync(cancellationToken);
         _historyManager.AddCommand(command.AssertNotNull());
-        return result;
+        return command.ExecuteAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -35,22 +35,22 @@ internal sealed class CommandOperator(
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExecuteQueuedCommandsAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> ExecuteQueuedCommandsAsync(CancellationToken cancellationToken = default)
     {
-        bool allSuccessful = true;
+        Result result = Result.Success();
         ICommandAsync? command;
         while ((command = _commandQueue.Dequeue()) != null)
         {
-            allSuccessful &= await ExecuteCommandAsync(command, cancellationToken);
+            result = await ExecuteCommandAsync(command, cancellationToken);
 
-            if (!allSuccessful)
+            if (!result.IsSuccess)
             {
-                _logger.LogWarning($"Execution of queued commands stopped due to {command.GetType().Name} failure.");
+                _logger.LogWarning($"Execution of {command.GetType().Name} failed: {result.ErrorMessage}");
                 break;
             }
         }
 
-        return allSuccessful;
+        return result;
     }
 
     /// <inheritdoc/>
@@ -76,10 +76,10 @@ internal sealed class CommandOperator(
     }
 
     /// <inheritdoc/>
-    public Task<bool?> UndoLastCommandAsync(CancellationToken cancellationToken = default)
+    public Task<Result<ICommandAsync?>> UndoLastCommandAsync(CancellationToken cancellationToken = default)
         => _historyManager.UndoAsync(cancellationToken);
 
     /// <inheritdoc/>
-    public Task<bool?> RedoLastCommandAsync(CancellationToken cancellationToken = default)
+    public Task<Result<ICommandAsync?>> RedoLastCommandAsync(CancellationToken cancellationToken = default)
         => _historyManager.RedoAsync(cancellationToken);
 }

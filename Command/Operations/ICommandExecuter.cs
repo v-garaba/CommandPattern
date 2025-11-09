@@ -1,4 +1,5 @@
 using Command.Commands;
+using Command.Common;
 
 namespace Command.Operations;
 
@@ -11,19 +12,19 @@ public interface ICommandExecuter
     /// Executes a command and adds it to the history.
     /// </summary>
     /// <param name="command">The command to execute.</param>
-    Task<bool> ExecuteCommandAsync(ICommandAsync command, CancellationToken cancellationToken = default);
+    Task<Result> ExecuteCommandAsync(ICommandAsync command, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Undoes the last executed command.
     /// </summary>
     /// <returns>Whether the undo was successful, or null if there is no command to undo.</returns>
-    Task<bool?> UndoLastCommandAsync(CancellationToken cancellationToken = default);
+    Task<Result<ICommandAsync?>> UndoLastCommandAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Redoes the last undone command.
     /// </summary>
     /// <returns>Whether the redo was successful, or null if there is no command to redo.</returns>
-    Task<bool?> RedoLastCommandAsync(CancellationToken cancellationToken = default);
+    Task<Result<ICommandAsync?>> RedoLastCommandAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Returns a string representation of the command history.

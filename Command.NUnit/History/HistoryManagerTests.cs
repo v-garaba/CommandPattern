@@ -25,15 +25,17 @@ public class HistoryManagerTests
         await historyManager.UndoAsync();
 
         // Assert
-        string content = await doc1.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello"));
+        var result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello"));
 
         // Act - Redo
         await historyManager.RedoAsync();
 
         // Assert
-        content = await doc1.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello World"));
+        result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello World"));
     }
 
     [Test]
@@ -56,20 +58,24 @@ public class HistoryManagerTests
         historyManager.AddCommand(cmd3);
 
         // Act & Assert
-        string content = await doc1.GetTextAsync();
-        Assert.That(content, Is.EqualTo("ABC"));
+        var result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("ABC"));
 
         await historyManager.UndoAsync();
-        content = await doc1.GetTextAsync();
-        Assert.That(content, Is.EqualTo("AB"));
+        result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("AB"));
 
         await historyManager.UndoAsync();
-        content = await doc1.GetTextAsync();
-        Assert.That(content, Is.EqualTo("A"));
+        result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("A"));
 
         await historyManager.UndoAsync();
-        content = await doc1.GetTextAsync();
-        Assert.That(content, Is.EqualTo(""));
+        result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo(""));
     }
 
     [Test]
@@ -97,8 +103,9 @@ public class HistoryManagerTests
         // Assert - Redo should not work
         await historyManager.RedoAsync();
 
-        string content = await doc1.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello"), "Redo should not change document after new command added post-undo.");
+        var result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello"), "Redo should not change document after new command added post-undo.");
     }
 
     [Test]

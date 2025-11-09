@@ -16,8 +16,9 @@ public class InsertCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -32,8 +33,9 @@ public class InsertCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello - World"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello - World"));
     }
 
     [Test]
@@ -48,8 +50,9 @@ public class InsertCommandTests
         await command.UndoAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo(""));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo(""));
     }
 
     [Test]
@@ -65,8 +68,9 @@ public class InsertCommandTests
         await command.UndoAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("First"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("First"));
     }
 
     [Test]

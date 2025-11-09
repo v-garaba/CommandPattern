@@ -17,8 +17,9 @@ public class MacroCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Test"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Test"));
     }
 
     [Test]
@@ -41,8 +42,9 @@ public class MacroCommandTests
         // Act & Assert
         await macroCommand.ExecuteAsync();
 
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Start ABC"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Start ABC"));
     }
 
     [Test]
@@ -64,8 +66,9 @@ public class MacroCommandTests
         await macroCommand.UndoAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Test"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Test"));
     }
 
     [Test]

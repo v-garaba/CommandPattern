@@ -22,16 +22,24 @@ public class CommandSequenceTests
         await cmd3.ExecuteAsync(); // "Hello World!"
 
         // Act & Assert
-        Assert.That(await doc1.GetTextAsync(), Is.EqualTo("Hello World!"));
+        var result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello World!"));
 
         await cmd3.UndoAsync();
-        Assert.That(await doc1.GetTextAsync(), Is.EqualTo("Hello World"));
+        result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello World"));
 
         await cmd2.UndoAsync();
-        Assert.That(await doc1.GetTextAsync(), Is.EqualTo("Hello"));
+        result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello"));
 
         await cmd1.UndoAsync();
-        Assert.That(await doc1.GetTextAsync(), Is.EqualTo(""));
+        result = await doc1.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo(""));
     }
 
     [Test]
@@ -50,18 +58,26 @@ public class CommandSequenceTests
         await deleteCmd.ExecuteAsync();
 
         // Act & Assert
-        Assert.That(await doc.GetTextAsync(), Is.EqualTo("Hi"));
+        var result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hi"));
 
         // Undo delete
         await deleteCmd.UndoAsync();
-        Assert.That(await doc.GetTextAsync(), Is.EqualTo("Hi World"));
+        result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hi World"));
 
         // Undo replace
         await replaceCmd.UndoAsync();
-        Assert.That(await doc.GetTextAsync(), Is.EqualTo("Hello World"));
+        result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello World"));
 
         // Undo insert
         await insertCmd.UndoAsync();
-        Assert.That(await doc.GetTextAsync(), Is.EqualTo(""));
+        result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo(""));
     }
 }

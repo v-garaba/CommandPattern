@@ -17,8 +17,9 @@ public class CureTextCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello@World"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello@World"));
     }
 
     [Test]
@@ -33,8 +34,9 @@ public class CureTextCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello_World"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello_World"));
     }
 
     [Test]
@@ -49,8 +51,9 @@ public class CureTextCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello@_World_Test"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello@_World_Test"));
     }
 
     [Test]
@@ -65,8 +68,9 @@ public class CureTextCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("a@b@c"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("a@b@c"));
     }
 
     [Test]
@@ -81,8 +85,9 @@ public class CureTextCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("HelloWorld"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("HelloWorld"));
     }
 
     [Test]
@@ -98,8 +103,9 @@ public class CureTextCommandTests
         await command.UndoAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello: World"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello: World"));
     }
 
     [Test]

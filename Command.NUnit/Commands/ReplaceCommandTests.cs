@@ -17,8 +17,9 @@ public class ReplaceCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hi World"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hi World"));
     }
 
     [Test]
@@ -33,8 +34,9 @@ public class ReplaceCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -49,8 +51,9 @@ public class ReplaceCommandTests
         await command.ExecuteAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello Small World"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello Small World"));
     }
 
     [Test]
@@ -66,8 +69,9 @@ public class ReplaceCommandTests
         await command.UndoAsync();
 
         // Assert
-        string content = await document.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello World"));
+        var result = await document.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello World"));
     }
 
     [Test]

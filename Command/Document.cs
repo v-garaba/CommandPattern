@@ -1,4 +1,5 @@
 using System.Text;
+using Command.Common;
 using Command.Memento;
 
 namespace Command;
@@ -8,7 +9,7 @@ public sealed class Document : ISnapshotRestorable
     private readonly StringBuilder _text = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
 
-    public async Task<bool> InsertTextAsync(
+    public async Task<Result> InsertTextAsync(
         int position,
         string text,
         CancellationToken cancellationToken = default
@@ -25,7 +26,7 @@ public sealed class Document : ISnapshotRestorable
         }
     }
 
-    public async Task<bool> DeleteTextAsync(
+    public async Task<Result> DeleteTextAsync(
         int position,
         int length,
         CancellationToken cancellationToken = default
@@ -42,21 +43,21 @@ public sealed class Document : ISnapshotRestorable
         }
     }
 
-    public async Task<bool> ReplaceTextAsync(
+    public async Task<Result> ReplaceTextAsync(
         int position,
         int length,
         string newText,
         CancellationToken cancellationToken = default
     )
     {
-        bool result = false;
+        Result result = Result.Success();
         await _lock.WaitAsync(cancellationToken);
         try
         {
             result = InternalDeleteText(position, length);
 
-            if (result == false)
-                return false;
+            if (!result.IsSuccess)
+                return result;
 
             result = InternalInsertText(position, newText);
         }
@@ -68,12 +69,12 @@ public sealed class Document : ISnapshotRestorable
         return result;
     }
 
-    public async Task<string> GetTextAsync(CancellationToken cancellationToken = default)
+    public async Task<Result<string>> GetTextAsync(CancellationToken cancellationToken = default)
     {
         await _lock.WaitAsync(cancellationToken);
         try
         {
-            return _text.ToString();
+            return Result<string>.Success(_text.ToString());
         }
         finally
         {
@@ -81,12 +82,12 @@ public sealed class Document : ISnapshotRestorable
         }
     }
 
-    public async Task<int> GetLengthAsync(CancellationToken cancellationToken = default)
+    public async Task<Result<int>> GetLengthAsync(CancellationToken cancellationToken = default)
     {
         await _lock.WaitAsync(cancellationToken);
         try
         {
-            return _text.Length;
+            return Result<int>.Success(_text.Length);
         }
         finally
         {
@@ -94,18 +95,18 @@ public sealed class Document : ISnapshotRestorable
         }
     }
 
-    public async Task<string> GetTextAsync(int position, int length, CancellationToken cancellationToken = default)
+    public async Task<Result<string>> GetTextAsync(int position, int length, CancellationToken cancellationToken = default)
     {
         await _lock.WaitAsync(cancellationToken);
         try
         {
             if (position < 0 || position >= _text.Length || length <= 0)
-                return string.Empty;
+                return Result<string>.Failure("Invalid position or length");
 
             if (position + length > _text.Length)
                 length = _text.Length - position;
 
-            return _text.ToString(position, length);
+            return Result<string>.Success(_text.ToString(position, length));
         }
         finally
         {
@@ -113,12 +114,13 @@ public sealed class Document : ISnapshotRestorable
         }
     }
 
-    public async Task ClearAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> ClearAsync(CancellationToken cancellationToken = default)
     {
         await _lock.WaitAsync(cancellationToken);
         try
         {
             _text.Clear();
+            return Result.Success();
         }
         finally
         {
@@ -126,25 +128,34 @@ public sealed class Document : ISnapshotRestorable
         }
     }
 
-    private bool InternalInsertText(int position, string text)
+    private Result InternalInsertText(int position, string text)
     {
-        if (position < 0 || position > _text.Length)
-            return false;
+        if (position < 0)
+            return "Invalid position for insertion. The position cannot be negative.";
+
+        if (position > _text.Length)
+            return "Invalid position for insertion. The position exceeds document length.";
 
         _text.Insert(position, text);
-        return true;
+        return Result.Success();
     }
 
-    private bool InternalDeleteText(int position, int length)
+    private Result InternalDeleteText(int position, int length)
     {
-        if (position < 0 || position >= _text.Length || length <= 0)
-            return false;
+        if (position < 0)
+            return "Invalid position or length for deletion. The position cannot be negative.";
+
+        if (position >= _text.Length )
+            return "Invalid position or length for deletion. The position exceeds document length.";
+
+        if (length <= 0)
+            return "Invalid position or length for deletion. The length must be positive.";
 
         if (position + length > _text.Length)
             length = _text.Length - position;
 
         _text.Remove(position, length);
-        return true;
+        return Result.Success();
     }
 
     public override string ToString() => _text.ToString();

@@ -1,3 +1,4 @@
+using Command.Common;
 using Command.Memento;
 using Command.Validation;
 
@@ -9,13 +10,13 @@ internal sealed class CureTextCommand(Document document) : ICommandAsync
     private readonly ISnapshot _snapshot = document.CreateSnapshot();
 
     /// <inheritdoc/>
-    public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        bool result = true;
-        string content = await _document.GetTextAsync(cancellationToken);
+        Result result = Result.Success();
+        Result<string> content = await _document.GetTextAsync(cancellationToken);
         int[] foundColumns =
         [
-            .. content
+            .. content.Value
                 .Select((c, i) => (Char: c, Index: i))
                 .Where(t => t.Char == ':')
                 .Select(t => t.Index),
@@ -25,17 +26,17 @@ internal sealed class CureTextCommand(Document document) : ICommandAsync
         {
             foreach (var columnIndex in foundColumns)
             {
-                result &= await _document.ReplaceTextAsync(columnIndex, 1, "@", cancellationToken);
+                result = await _document.ReplaceTextAsync(columnIndex, 1, "@", cancellationToken);
             }
         }
 
-        if (!result)
-            return false;
+        if (!result.IsSuccess)
+            return result;
 
         content = await _document.GetTextAsync(cancellationToken);
         int[] foundSpaces =
         [
-            .. content
+            .. content.Value
                 .Select((c, i) => (Char: c, Index: i))
                 .Where(t => t.Char == ' ')
                 .Select(t => t.Index),
@@ -45,7 +46,7 @@ internal sealed class CureTextCommand(Document document) : ICommandAsync
         {
             foreach (var spaceIndex in foundSpaces)
             {
-                result &= await _document.ReplaceTextAsync(spaceIndex, 1, "_", cancellationToken);
+                result = await _document.ReplaceTextAsync(spaceIndex, 1, "_", cancellationToken);
             }
         }
 
@@ -53,10 +54,10 @@ internal sealed class CureTextCommand(Document document) : ICommandAsync
     }
 
     /// <inheritdoc/>
-    public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> UndoAsync(CancellationToken cancellationToken = default)
     {
         await _document.RestoreSnapshot(_snapshot, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     /// <inheritdoc/>

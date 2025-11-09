@@ -13,8 +13,9 @@ public class DocumentTests
         await doc.InsertTextAsync(0, "Test");
 
         // Assert
-        string content = await doc.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Test"));
+        var result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Test"));
     }
 
     [Test]
@@ -28,8 +29,9 @@ public class DocumentTests
         await doc.DeleteTextAsync(5, 6);
 
         // Assert
-        string content = await doc.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hello"));
+        var result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -43,8 +45,9 @@ public class DocumentTests
         await doc.ReplaceTextAsync(0, 5, "Hi");
 
         // Assert
-        string content = await doc.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Hi World"));
+        var result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Hi World"));
     }
 
     [Test]
@@ -58,8 +61,9 @@ public class DocumentTests
         await doc.ClearAsync();
 
         // Assert
-        string content = await doc.GetTextAsync();
-        Assert.That(content, Is.EqualTo(string.Empty));
+        var result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo(string.Empty));
     }
 
     [Test]
@@ -74,15 +78,17 @@ public class DocumentTests
 
         await doc.ClearAsync();
 
-        string content = await doc.GetTextAsync();
-        Assert.That(content, Is.EqualTo(string.Empty));
+        var result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo(string.Empty));
 
         // Act: Restore from snapshot
         await doc.RestoreSnapshot(snapshot);
 
         // Assert
-        content = await doc.GetTextAsync();
-        Assert.That(content, Is.EqualTo("Original"));
+        result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("Original"));
     }
 
     [Test]
@@ -93,10 +99,11 @@ public class DocumentTests
         await doc.InsertTextAsync(0, "Hello World");
 
         // Act
-        var text = await doc.GetTextAsync(0, 5);
+        var textResult = await doc.GetTextAsync(0, 5);
 
         // Assert
-        Assert.That(text, Is.EqualTo("Hello"));
+        Assert.That(textResult.IsSuccess, Is.True);
+        Assert.That(textResult.Value, Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -107,10 +114,10 @@ public class DocumentTests
         await doc.InsertTextAsync(0, "Hello");
 
         // Act
-        var text = await doc.GetTextAsync(10, 5);
+        var textResult = await doc.GetTextAsync(10, 5);
 
         // Assert
-        Assert.That(text, Is.EqualTo(string.Empty));
+        Assert.That(textResult.IsSuccess, Is.False);
     }
 
     [Test]
@@ -124,8 +131,9 @@ public class DocumentTests
         await doc.DeleteTextAsync(2, 100);
 
         // Assert
-        string content = await doc.GetTextAsync();
-        Assert.That(content, Is.EqualTo("He"));
+        var result = await doc.GetTextAsync();
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.Value, Is.EqualTo("He"));
     }
 
     [Test]
@@ -133,15 +141,18 @@ public class DocumentTests
     {
         // Arrange & Act
         var doc = new Document();
-        int length = await doc.GetLengthAsync();
-        Assert.That(length, Is.EqualTo(0));
+        var lengthResult = await doc.GetLengthAsync();
+        Assert.That(lengthResult.IsSuccess, Is.True);
+        Assert.That(lengthResult.Value, Is.EqualTo(0));
 
         await doc.InsertTextAsync(0, "Hello");
-        length = await doc.GetLengthAsync();
-        Assert.That(length, Is.EqualTo(5));
+        lengthResult = await doc.GetLengthAsync();
+        Assert.That(lengthResult.IsSuccess, Is.True);
+        Assert.That(lengthResult.Value, Is.EqualTo(5));
 
         await doc.InsertTextAsync(5, " World");
-        length = await doc.GetLengthAsync();
-        Assert.That(length, Is.EqualTo(11));
+        lengthResult = await doc.GetLengthAsync();
+        Assert.That(lengthResult.IsSuccess, Is.True);
+        Assert.That(lengthResult.Value, Is.EqualTo(11));
     }
 }

@@ -1,3 +1,4 @@
+using Command.Common;
 using Command.Memento;
 using Command.Validation;
 
@@ -15,17 +16,17 @@ internal sealed class MacroCommand(
     private readonly List<ICommandAsync> _executedCommands = [];
 
     /// <inheritdoc/>
-    public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        bool result = true;
+        Result result = Result.Success();
         _executedCommands.Clear();
         foreach (var factory in _commandFactories)
         {
             var command = factory(_document);
-            result &= await command.ExecuteAsync(cancellationToken);
+            result = await command.ExecuteAsync(cancellationToken);
             _executedCommands.Add(command);
 
-            if (!result)
+            if (!result.IsSuccess)
                 break;
         }
 
@@ -33,10 +34,10 @@ internal sealed class MacroCommand(
     }
 
     /// <inheritdoc/>
-    public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> UndoAsync(CancellationToken cancellationToken = default)
     {
         await _document.RestoreSnapshot(_snapshot, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     /// <inheritdoc/>

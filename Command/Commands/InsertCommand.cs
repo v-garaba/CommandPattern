@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Command.Common;
 using Command.Memento;
 using Command.Validation;
 
@@ -13,16 +14,16 @@ internal sealed class InsertCommand(Document document, int position, string text
     private readonly string _text = text.AssertNotEmpty();
 
     /// <inheritdoc/>
-    public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         return await _document.InsertTextAsync(_position, _text, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> UndoAsync(CancellationToken cancellationToken = default)
     {
         await _document.RestoreSnapshot(_snapshot, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     /// <inheritdoc/>

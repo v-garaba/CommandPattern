@@ -1,4 +1,5 @@
 using Command.Commands;
+using Command.Common;
 
 namespace Command.Operations;
 
@@ -16,7 +17,7 @@ public interface ICommandQueuer
     /// <summary>
     /// Executes all queued commands.
     /// </summary>
-    Task<bool> ExecuteQueuedCommandsAsync(CancellationToken cancellationToken = default);
+    Task<Result> ExecuteQueuedCommandsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clears all queued commands without executing them.

@@ -1,3 +1,4 @@
+using Command.Common;
 using Command.Memento;
 using Command.Validation;
 
@@ -17,16 +18,16 @@ internal sealed class ReplaceCommand(
     private readonly string _replaceText = replaceText.AssertNotEmpty();
 
     /// <inheritdoc/>
-    public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         return await _document.ReplaceTextAsync(_position, _length, _replaceText, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> UndoAsync(CancellationToken cancellationToken = default)
+    public async Task<Result> UndoAsync(CancellationToken cancellationToken = default)
     {
         await _document.RestoreSnapshot(_snapshot, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     /// <inheritdoc/>
