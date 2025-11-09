@@ -149,10 +149,19 @@ public sealed class Document : ISnapshotRestorable
 
     public override string ToString() => _text.ToString();
 
-    #region ISnapshotRestorable Members
+    #region ISnapshotRestorable Implementation
     public ISnapshot CreateSnapshot()
     {
-        return new DocumentState(_text.ToString());
+        return new DocumentState(
+            _text.ToString(),
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow,
+            "1.0",
+            new Dictionary<string, object>
+            {
+                ["SnapshotType"] = "DocumentState",
+            }
+        );
     }
 
     public async Task RestoreSnapshot(ISnapshot snapshot, CancellationToken cancellationToken = default)
@@ -172,9 +181,12 @@ public sealed class Document : ISnapshotRestorable
         }
     }
 
-    private sealed class DocumentState(string content) : ISnapshot
-    {
-        public string Content { get; } = content;
-    }
+    private sealed record DocumentState(
+        string Content,
+        Guid Id,
+        DateTimeOffset CreatedAt,
+        string Version,
+        IReadOnlyDictionary<string, object>? Metadata
+    ) : ISnapshot;
     #endregion
 }
